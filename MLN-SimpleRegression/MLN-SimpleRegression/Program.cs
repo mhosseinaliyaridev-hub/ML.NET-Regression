@@ -17,7 +17,6 @@ internal class Program
     // مسیر فایل Excel که اطلاعات پرونده‌ها داخل آن قرار دارد
     private const string ExcelPath = @"Data\Claims.xlsx";
 
-    // نقطه شروع اجرای برنامه
     static void Main()
     {
         // فعال کردن نمایش صحیح حروف فارسی در Console
