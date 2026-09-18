@@ -4,39 +4,69 @@ namespace StudentScorePrediction.Application.Interfaces;
 
 public interface IPredictionService
 {
-    Task<PredictionResultDto> PredictAsync(CreatePredictionDto input, CancellationToken cancellationToken = default);
-    Task<IEnumerable<PredictionDto>> GetPredictionsAsync(int page, int pageSize, int? studentId = null, CancellationToken cancellationToken = default);
-    Task<int> GetTotalPredictionCountAsync(CancellationToken cancellationToken = default);
+    Task<PredictionResultDto> PredictAsync(PredictionRequestDto request, CancellationToken cancellationToken = default);
+    Task<(IEnumerable<PredictionDto> Predictions, int TotalCount)> GetAllAsync(
+        string? searchTerm = null,
+        int? modelVersionId = null,
+        DateTime? fromDate = null,
+        DateTime? toDate = null,
+        int pageNumber = 1,
+        int pageSize = 10,
+        CancellationToken cancellationToken = default);
+    Task<PredictionDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task<decimal> GetAveragePredictedScoreAsync(CancellationToken cancellationToken = default);
 }
 
 public interface ITrainingService
 {
-    Task<int> StartTrainingAsync(string algorithm, CancellationToken cancellationToken = default);
-    Task<TrainingRunDto?> GetTrainingStatusAsync(int trainingId, CancellationToken cancellationToken = default);
-    Task<IEnumerable<TrainingRunDto>> GetTrainingRunsAsync(CancellationToken cancellationToken = default);
+    Task<TrainingRunDto> StartTrainingAsync(TrainingRequestDto request, CancellationToken cancellationToken = default);
+    Task<TrainingRunDto?> GetCurrentStatusAsync(CancellationToken cancellationToken = default);
+    Task<(IEnumerable<TrainingRunDto> Runs, int TotalCount)> GetTrainingHistoryAsync(
+        int pageNumber = 1,
+        int pageSize = 10,
+        CancellationToken cancellationToken = default);
+    Task<IEnumerable<TrainingRunDto>> GetLatestRunsAsync(int count = 5, CancellationToken cancellationToken = default);
 }
 
 public interface IModelService
 {
-    Task<IEnumerable<ModelVersionDto>> GetAllModelsAsync(CancellationToken cancellationToken = default);
-    Task<ModelVersionDto?> GetModelByIdAsync(int id, CancellationToken cancellationToken = default);
-    Task ActivateModelAsync(int id, CancellationToken cancellationToken = default);
     Task<ModelVersionDto?> GetActiveModelAsync(CancellationToken cancellationToken = default);
+    Task<IEnumerable<ModelVersionDto>> GetAllModelsAsync(CancellationToken cancellationToken = default);
+    Task<ModelVersionDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task ActivateModelAsync(int id, CancellationToken cancellationToken = default);
+    Task<IEnumerable<ModelComparisonDto>> CompareModelsAsync(CancellationToken cancellationToken = default);
 }
 
 public interface IDatasetService
 {
+    Task<DatasetInfoDto> GenerateDatasetAsync(int recordCount, CancellationToken cancellationToken = default);
+    Task<DatasetInfoDto> UploadDatasetAsync(Stream fileStream, string fileName, CancellationToken cancellationToken = default);
+    Task<DatasetInfoDto?> GetLatestDatasetAsync(CancellationToken cancellationToken = default);
     Task<DatasetStatisticsDto> GetStatisticsAsync(CancellationToken cancellationToken = default);
-    Task<string> GenerateDatasetAsync(int recordCount, CancellationToken cancellationToken = default);
-    Task<string> UploadDatasetAsync(Stream fileStream, string fileName, CancellationToken cancellationToken = default);
+    Task<(IEnumerable<StudentInput> Data, int TotalCount)> GetPreviewAsync(
+        int pageNumber = 1,
+        int pageSize = 10,
+        CancellationToken cancellationToken = default);
 }
 
 public interface IStudentService
 {
-    Task<StudentDto?> GetStudentByIdAsync(int id, CancellationToken cancellationToken = default);
-    Task<(IEnumerable<StudentDto> Students, int TotalCount)> GetStudentsAsync(int page, int pageSize, string? search = null, CancellationToken cancellationToken = default);
-    Task<StudentDto> CreateStudentAsync(CreateStudentDto dto, CancellationToken cancellationToken = default);
-    Task UpdateStudentAsync(int id, UpdateStudentDto dto, CancellationToken cancellationToken = default);
-    Task DeleteStudentAsync(int id, CancellationToken cancellationToken = default);
-    Task<int> GetTotalStudentCountAsync(CancellationToken cancellationToken = default);
+    Task<StudentDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task<(IEnumerable<StudentDto> Students, int TotalCount)> GetAllAsync(
+        int pageNumber = 1,
+        int pageSize = 10,
+        CancellationToken cancellationToken = default);
+    Task<(IEnumerable<StudentDto> Students, int TotalCount)> SearchAsync(
+        string? searchTerm,
+        int pageNumber = 1,
+        int pageSize = 10,
+        CancellationToken cancellationToken = default);
+    Task<StudentDto> CreateAsync(CreateStudentDto dto, CancellationToken cancellationToken = default);
+    Task<StudentDto> UpdateAsync(int id, UpdateStudentDto dto, CancellationToken cancellationToken = default);
+    Task DeleteAsync(int id, CancellationToken cancellationToken = default);
+    Task<IEnumerable<PredictionDto>> GetPredictionsAsync(
+        int studentId,
+        int pageNumber = 1,
+        int pageSize = 10,
+        CancellationToken cancellationToken = default);
 }
