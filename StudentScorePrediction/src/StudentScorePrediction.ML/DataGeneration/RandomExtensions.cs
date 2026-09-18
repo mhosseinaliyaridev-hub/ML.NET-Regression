@@ -12,7 +12,7 @@ public static class RandomExtensions
     public static float NextFloat(this Random random, float minValue, float maxValue)
         => (float)(random.NextDouble() * (maxValue - minValue) + minValue);
 
-    public static T NextEnum<T>(this Random random) where T : Enum
+    public static T NextEnum<T>(this Random random) where T : struct, Enum
     {
         var values = Enum.GetValues<T>();
         return values[random.Next(values.Length)];

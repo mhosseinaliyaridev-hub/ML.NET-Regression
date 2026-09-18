@@ -1,4 +1,6 @@
 using Microsoft.ML;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using StudentScorePrediction.Application.DTOs;
 using StudentScorePrediction.Application.Interfaces;
 using StudentScorePrediction.Domain.Enums;

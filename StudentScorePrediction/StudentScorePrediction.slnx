@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/StudentScorePrediction.Api/StudentScorePrediction.Api.csproj" />
+    <Project Path="src/StudentScorePrediction.Application/StudentScorePrediction.Application.csproj" />
+    <Project Path="src/StudentScorePrediction.Client/StudentScorePrediction.Client.csproj" />
+    <Project Path="src/StudentScorePrediction.Domain/StudentScorePrediction.Domain.csproj" />
+    <Project Path="src/StudentScorePrediction.Infrastructure/StudentScorePrediction.Infrastructure.csproj" />
+    <Project Path="src/StudentScorePrediction.ML/StudentScorePrediction.ML.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/StudentScorePrediction.Tests/StudentScorePrediction.Tests.csproj" />
+  </Folder>
+</Solution>

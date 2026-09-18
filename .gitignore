@@ -1,21 +1,26 @@
 ```
 # Build artifacts
-*.slnx
-obj/
 bin/
-*.dll
+obj/
+out/
 *.exe
-*.pdb
+*.dll
 *.so
-*.dylib
-*.nupkg
+*.a
+*.obj
+*.out
 
 # Dependencies
 packages/
 node_modules/
+.nuget/
+.nyc_output/
+coverage/
 
-# Logs
+# Logs and temp files
 *.log
+*.tmp
+*.swp
 
 # Environment
 .env
@@ -25,19 +30,22 @@ node_modules/
 # Editors
 .vscode/
 .idea/
-*.swp
-*.swo
+*.userprefs
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
 
 # OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+desktop.ini
 
-# Test coverage
-coverage/
-htmlcov/
-*.coverage
-
-# Temporary files
-*.tmp
-*.temp
+# Testing
+TestResults/
 ```
