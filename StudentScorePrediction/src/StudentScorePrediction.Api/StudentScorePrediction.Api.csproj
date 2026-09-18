@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\StudentScorePrediction.Domain\StudentScorePrediction.Domain.csproj" />
+    <ProjectReference Include="..\StudentScorePrediction.Application\StudentScorePrediction.Application.csproj" />
+    <ProjectReference Include="..\StudentScorePrediction.Infrastructure\StudentScorePrediction.Infrastructure.csproj" />
+    <ProjectReference Include="..\StudentScorePrediction.ML\StudentScorePrediction.ML.csproj" />
+  </ItemGroup>
+
+</Project>
