@@ -1,61 +1,88 @@
 ```
 # Build results
-[Dd]ebug/
-[Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
-x64/
-x86/
-[Dd]eploy/
-[Bb]uild/
-bld/
-[Bb]in/
-[Oo]bj/
-[Oo]ut/
+**/bin/
+**/obj/
+**/out/
 
-# Visual Studio Code
+# User-specific files
+.vs/
 .vscode/
-
-# Visual Studio
-*.user
+*.userprefs
 *.userosscache
 *.suo
-*.csproj.user
-*.vbproj.user
-*.fsproj.user
-*.userprefs
-
-# Rider
-.idea/
-
-# NuGet
-*.nupkg
-packages/
-.nuget/
-NuGet.Config
-
-# ASP.NET Core
-**/bin/Debug/**
-**/bin/Release/**
-**/obj/**
-
-# Log files
+*.user
+*.aps
+*.ilk
+*.pidb
+*.svclog
+*.pdb
+*.mdb
+*.rpt
+*.cache
+*.cached
 *.log
+*.tmp
+*.temp
 
-# Environment
+# Environment specific settings
 .env
 .env.local
 *.env.*
 
 # OS generated files
 .DS_Store
-Thumbs.db
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
 ehthumbs.db
-Icon?
+Thumbs.db
 desktop.ini
+*.nupkg
+[Nn]uget.*.json
+[Oo]bj/
 
-# Temporary files
-*.tmp
-*.temp
-*~
+# Visual Studio Code
+.vscode/*
+
+# Dependencies
+node_modules/
+packages/
+julia-*/
+zig*/
+
+# Test results and coverage
+TestResults/
+coverage/
+*.cover
+*.log
+*.xml
+
+# Localized resources
+*.en.resx
+*.es.resx
+*.fr.resx
+*.de.resx
+*.ja.resx
+*.ko.resx
+*.ru.resx
+*.zh-Hans.resx
+*.zh-Hant.resx
+
+# Publish artifacts
+publish/
+deploy/
+
+# ML/AI specific
+*.model
+*.pb
+*.onnx
+*.joblib
+*.pkl
+*.pickle
+
+# Configuration specific to ML.NET
+MLModel.zip
+MLModel.consumption.zip
+MLModel.training.zip
 ```

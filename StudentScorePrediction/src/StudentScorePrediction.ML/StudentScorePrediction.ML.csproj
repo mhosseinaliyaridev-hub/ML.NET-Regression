@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\StudentScorePrediction.Domain\StudentScorePrediction.Domain.csproj" />
+    <ProjectReference Include="..\StudentScorePrediction.Application\StudentScorePrediction.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.ML" Version="4.0.0-preview.25163.3" />
+    <PackageReference Include="Microsoft.ML.FastTree" Version="4.0.0-preview.25163.3" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>
