@@ -1,3 +1,5 @@
+using StudentScorePrediction.Domain.Enums;
+
 namespace StudentScorePrediction.Domain.Entities;
 
 public class Student
@@ -6,21 +8,21 @@ public class Student
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public int Age { get; set; }
-    public string Gender { get; set; } = string.Empty;
-    public double StudyHours { get; set; }
-    public double AttendanceRate { get; set; }
-    public double HomeworkCompletionRate { get; set; }
-    public double PreviousAverage { get; set; }
-    public double PreviousExamScore { get; set; }
-    public double MidtermScore { get; set; }
+    public Gender Gender { get; set; }
+    public float StudyHours { get; set; }
+    public float AttendanceRate { get; set; }
+    public float HomeworkCompletionRate { get; set; }
+    public float PreviousAverage { get; set; }
+    public float PreviousExamScore { get; set; }
+    public float MidtermScore { get; set; }
     public int AbsenceDays { get; set; }
-    public double SleepHours { get; set; }
-    public double ClassParticipation { get; set; }
-    public double MobileUsageHours { get; set; }
+    public float SleepHours { get; set; }
+    public float ClassParticipation { get; set; }
+    public float MobileUsageHours { get; set; }
     public int PracticeTestCount { get; set; }
-    public double? FinalScore { get; set; }
+    public float? FinalScore { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
 
-    public virtual ICollection<Prediction> Predictions { get; set; } = new List<Prediction>();
+    public ICollection<Prediction> Predictions { get; set; } = new List<Prediction>();
 }

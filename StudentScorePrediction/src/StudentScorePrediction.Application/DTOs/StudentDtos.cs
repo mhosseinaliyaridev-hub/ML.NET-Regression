@@ -1,129 +1,64 @@
+using StudentScorePrediction.Domain.Enums;
+
 namespace StudentScorePrediction.Application.DTOs;
 
 public class StudentDto
 {
     public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string? Email { get; set; }
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
     public int Age { get; set; }
-    public string Gender { get; set; } = string.Empty;
-    public double StudyHours { get; set; }
-    public double AttendanceRate { get; set; }
-    public double HomeworkCompletionRate { get; set; }
-    public double PreviousAverage { get; set; }
-    public double PreviousExamScore { get; set; }
-    public double MidtermScore { get; set; }
+    public Gender Gender { get; set; }
+    public float StudyHours { get; set; }
+    public float AttendanceRate { get; set; }
+    public float HomeworkCompletionRate { get; set; }
+    public float PreviousAverage { get; set; }
+    public float PreviousExamScore { get; set; }
+    public float MidtermScore { get; set; }
     public int AbsenceDays { get; set; }
-    public double SleepHours { get; set; }
-    public double ClassParticipation { get; set; }
-    public double MobileUsageHours { get; set; }
+    public float SleepHours { get; set; }
+    public float ClassParticipation { get; set; }
+    public float MobileUsageHours { get; set; }
     public int PracticeTestCount { get; set; }
+    public float? FinalScore { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 }
 
 public class CreateStudentDto
 {
-    public string Name { get; set; } = string.Empty;
-    public string? Email { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(10, 25)]
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
     public int Age { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Required]
-    public string Gender { get; set; } = string.Empty;
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 24)]
-    public double StudyHours { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 100)]
-    public double AttendanceRate { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 100)]
-    public double HomeworkCompletionRate { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 20)]
-    public double PreviousAverage { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 20)]
-    public double PreviousExamScore { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 20)]
-    public double MidtermScore { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 30)]
+    public Gender Gender { get; set; }
+    public float StudyHours { get; set; }
+    public float AttendanceRate { get; set; }
+    public float HomeworkCompletionRate { get; set; }
+    public float PreviousAverage { get; set; }
+    public float PreviousExamScore { get; set; }
+    public float MidtermScore { get; set; }
     public int AbsenceDays { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 24)]
-    public double SleepHours { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 100)]
-    public double ClassParticipation { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 24)]
-    public double MobileUsageHours { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 100)]
+    public float SleepHours { get; set; }
+    public float ClassParticipation { get; set; }
+    public float MobileUsageHours { get; set; }
     public int PracticeTestCount { get; set; }
 }
 
 public class UpdateStudentDto
 {
-    public string? Name { get; set; }
-    public string? Email { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(10, 25)]
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
     public int? Age { get; set; }
-    
-    public string? Gender { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 24)]
-    public double? StudyHours { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 100)]
-    public double? AttendanceRate { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 100)]
-    public double? HomeworkCompletionRate { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 20)]
-    public double? PreviousAverage { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 20)]
-    public double? PreviousExamScore { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 20)]
-    public double? MidtermScore { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 30)]
+    public Gender? Gender { get; set; }
+    public float? StudyHours { get; set; }
+    public float? AttendanceRate { get; set; }
+    public float? HomeworkCompletionRate { get; set; }
+    public float? PreviousAverage { get; set; }
+    public float? PreviousExamScore { get; set; }
+    public float? MidtermScore { get; set; }
     public int? AbsenceDays { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 24)]
-    public double? SleepHours { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 100)]
-    public double? ClassParticipation { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 24)]
-    public double? MobileUsageHours { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 100)]
+    public float? SleepHours { get; set; }
+    public float? ClassParticipation { get; set; }
+    public float? MobileUsageHours { get; set; }
     public int? PracticeTestCount { get; set; }
-}
-
-public class StudentInput
-{
-    public int Age { get; set; }
-    public string Gender { get; set; } = string.Empty;
-    public double StudyHours { get; set; }
-    public double AttendanceRate { get; set; }
-    public double HomeworkCompletionRate { get; set; }
-    public double PreviousAverage { get; set; }
-    public double PreviousExamScore { get; set; }
-    public double MidtermScore { get; set; }
-    public int AbsenceDays { get; set; }
-    public double SleepHours { get; set; }
-    public double ClassParticipation { get; set; }
-    public double MobileUsageHours { get; set; }
-    public int PracticeTestCount { get; set; }
 }

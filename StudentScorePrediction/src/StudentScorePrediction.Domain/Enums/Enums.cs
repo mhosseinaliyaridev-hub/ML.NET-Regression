@@ -1,20 +1,33 @@
 namespace StudentScorePrediction.Domain.Enums;
 
+public enum Gender
+{
+    Male,
+    Female
+}
+
 public enum AlgorithmType
 {
-    SdcaRegression = 0,
-    FastTreeRegression = 1,
-    FastForestRegression = 2
+    SdcaRegression,
+    FastTreeRegression,
+    FastForestRegression
 }
 
 public enum TrainingStatus
 {
-    Queued = 0,
-    LoadingData = 1,
-    PreparingData = 2,
-    Training = 3,
-    Evaluating = 4,
-    SavingModel = 5,
-    Completed = 6,
-    Failed = 7
+    Queued,
+    LoadingData,
+    PreparingData,
+    Training,
+    Evaluating,
+    SavingModel,
+    Completed,
+    Failed
+}
+
+public enum ModelStatus
+{
+    Active,
+    Inactive,
+    Archived
 }

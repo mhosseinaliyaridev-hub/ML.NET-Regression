@@ -3,75 +3,37 @@ namespace StudentScorePrediction.Application.DTOs;
 public class PredictionDto
 {
     public int Id { get; set; }
-    public int? StudentId { get; set; }
+    public int StudentId { get; set; }
     public string? StudentName { get; set; }
-    public double PredictedScore { get; set; }
-    public double? ActualScore { get; set; }
-    public int? ModelVersionId { get; set; }
-    public string? ModelVersion { get; set; }
-    public string? Algorithm { get; set; }
-    public long DurationMs { get; set; }
-    public DateTime CreatedAt { get; set; }
+    public float PredictedScore { get; set; }
+    public float? ActualScore { get; set; }
+    public string ModelVersion { get; set; } = string.Empty;
+    public TimeSpan Duration { get; set; }
+    public DateTime PredictionTime { get; set; }
 }
 
-public class PredictionRequestDto
+public class CreatePredictionDto
 {
-    public int? StudentId { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(10, 25)]
-    public int Age { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Required]
+    public int StudentId { get; set; }
+    public float Age { get; set; }
     public string Gender { get; set; } = string.Empty;
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 24)]
-    public double StudyHours { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 100)]
-    public double AttendanceRate { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 100)]
-    public double HomeworkCompletionRate { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 20)]
-    public double PreviousAverage { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 20)]
-    public double PreviousExamScore { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 20)]
-    public double MidtermScore { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 30)]
-    public int AbsenceDays { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 24)]
-    public double SleepHours { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 100)]
-    public double ClassParticipation { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 24)]
-    public double MobileUsageHours { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 100)]
-    public int PracticeTestCount { get; set; }
-    
-    [System.ComponentModel.DataAnnotations.Range(0, 20)]
-    public double? ActualScore { get; set; }
+    public float StudyHours { get; set; }
+    public float AttendanceRate { get; set; }
+    public float HomeworkCompletionRate { get; set; }
+    public float PreviousAverage { get; set; }
+    public float PreviousExamScore { get; set; }
+    public float MidtermScore { get; set; }
+    public float AbsenceDays { get; set; }
+    public float SleepHours { get; set; }
+    public float ClassParticipation { get; set; }
+    public float MobileUsageHours { get; set; }
+    public float PracticeTestCount { get; set; }
 }
 
 public class PredictionResultDto
 {
-    public int Id { get; set; }
-    public int? StudentId { get; set; }
-    public string? StudentName { get; set; }
-    public double PredictedScore { get; set; }
-    public double Confidence { get; set; }
+    public float PredictedScore { get; set; }
     public string ModelVersion { get; set; } = string.Empty;
-    public int ModelVersionId { get; set; }
-    public string Algorithm { get; set; } = string.Empty;
-    public long DurationMs { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public Dictionary<string, double>? FeatureImportance { get; set; }
+    public DateTime PredictionTime { get; set; }
+    public TimeSpan Duration { get; set; }
 }

@@ -1,50 +1,48 @@
-using StudentScorePrediction.Domain.Entities;
+using StudentScorePrediction.Application.DTOs;
 
 namespace StudentScorePrediction.Application.Interfaces;
 
 public interface IStudentRepository
 {
-    Task<Student?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
-    Task<IEnumerable<Student>> GetAllAsync(CancellationToken cancellationToken = default);
-    Task<(IEnumerable<Student> Students, int TotalCount)> GetPagedAsync(int page, int pageSize, string? search = null, CancellationToken cancellationToken = default);
-    Task<Student> AddAsync(Student student, CancellationToken cancellationToken = default);
-    Task UpdateAsync(Student student, CancellationToken cancellationToken = default);
-    Task DeleteAsync(int id, CancellationToken cancellationToken = default);
+    Task<StudentDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task<IEnumerable<StudentDto>> GetAllAsync(int page, int pageSize, CancellationToken cancellationToken = default);
     Task<int> GetTotalCountAsync(CancellationToken cancellationToken = default);
+    Task<StudentDto> CreateAsync(CreateStudentDto dto, CancellationToken cancellationToken = default);
+    Task<StudentDto?> UpdateAsync(int id, UpdateStudentDto dto, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default);
+    Task<IEnumerable<StudentDto>> SearchAsync(string searchTerm, int page, int pageSize, CancellationToken cancellationToken = default);
 }
 
 public interface IPredictionRepository
 {
-    Task<Prediction?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
-    Task<IEnumerable<Prediction>> GetAllAsync(CancellationToken cancellationToken = default);
-    Task<(IEnumerable<Prediction> Predictions, int TotalCount)> GetPagedAsync(int page, int pageSize, int? studentId = null, CancellationToken cancellationToken = default);
-    Task<Prediction> AddAsync(Prediction prediction, CancellationToken cancellationToken = default);
-    Task<IEnumerable<Prediction>> GetByStudentIdAsync(int studentId, CancellationToken cancellationToken = default);
+    Task<PredictionDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task<IEnumerable<PredictionDto>> GetAllAsync(int page, int pageSize, CancellationToken cancellationToken = default);
     Task<int> GetTotalCountAsync(CancellationToken cancellationToken = default);
+    Task<PredictionDto> CreateAsync(CreatePredictionDto dto, CancellationToken cancellationToken = default);
+    Task<IEnumerable<PredictionDto>> GetByStudentIdAsync(int studentId, CancellationToken cancellationToken = default);
 }
 
 public interface IModelVersionRepository
 {
-    Task<ModelVersion?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
-    Task<IEnumerable<ModelVersion>> GetAllAsync(CancellationToken cancellationToken = default);
-    Task<ModelVersion> AddAsync(ModelVersion model, CancellationToken cancellationToken = default);
-    Task UpdateAsync(ModelVersion model, CancellationToken cancellationToken = default);
-    Task<ModelVersion?> GetActiveAsync(CancellationToken cancellationToken = default);
-    Task SetAllInactiveAsync(CancellationToken cancellationToken = default);
+    Task<ModelVersionDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task<IEnumerable<ModelVersionDto>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<ModelVersionDto> CreateAsync(ModelVersionDto dto, CancellationToken cancellationToken = default);
+    Task<bool> SetActiveAsync(int id, CancellationToken cancellationToken = default);
+    Task<ModelVersionDto?> GetActiveAsync(CancellationToken cancellationToken = default);
 }
 
 public interface ITrainingRunRepository
 {
-    Task<TrainingRun?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
-    Task<IEnumerable<TrainingRun>> GetAllAsync(CancellationToken cancellationToken = default);
-    Task<TrainingRun> AddAsync(TrainingRun run, CancellationToken cancellationToken = default);
-    Task UpdateAsync(TrainingRun run, CancellationToken cancellationToken = default);
-    Task<TrainingRun?> GetLatestAsync(CancellationToken cancellationToken = default);
+    Task<TrainingRunDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task<IEnumerable<TrainingRunDto>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<TrainingRunDto> CreateAsync(TrainingRunDto dto, CancellationToken cancellationToken = default);
+    Task<TrainingRunDto> UpdateAsync(TrainingRunDto dto, CancellationToken cancellationToken = default);
 }
 
-public interface IDatasetInfoRepository
+public interface IDatasetRepository
 {
-    Task<DatasetInfo?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
-    Task<DatasetInfo?> GetLatestAsync(CancellationToken cancellationToken = default);
-    Task<DatasetInfo> AddAsync(DatasetInfo info, CancellationToken cancellationToken = default);
+    Task<DatasetDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task<IEnumerable<DatasetDto>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<DatasetDto> CreateAsync(DatasetDto dto, CancellationToken cancellationToken = default);
+    Task<DatasetStatisticsDto> GetStatisticsAsync(string filePath, CancellationToken cancellationToken = default);
 }

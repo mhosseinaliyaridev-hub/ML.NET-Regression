@@ -1,223 +1,404 @@
 using Microsoft.ML;
-using Microsoft.ML.Data;
-using Microsoft.ML.Trainers.FastTree;
-using Microsoft.ML.Trainers.Sdca;
 using StudentScorePrediction.Application.DTOs;
-using StudentScorePrediction.Domain.Entities;
+using StudentScorePrediction.Application.Interfaces;
+using StudentScorePrediction.Domain.Enums;
 using StudentScorePrediction.ML.DataGeneration;
-using StudentScorePrediction.ML.Models;
+using System.Globalization;
 
 namespace StudentScorePrediction.ML.Services;
 
 public class MlService : IMlService
 {
-    private readonly MLContext _mlContext;
-    private readonly string _modelPath;
-    private ITransformer? _trainedModel;
-    private PredictionEngine<StudentInput, StudentPrediction>? _predictionEngine;
+    private readonly string _modelsPath;
+    private readonly string _datasetPath;
+    private readonly ILogger<MlService> _logger;
+    private ITransformer? _currentModel;
+    private string? _currentModelVersion;
 
-    public MlService()
+    public MlService(ILogger<MlService> logger, IConfiguration configuration)
     {
-        _mlContext = new MLContext(seed: 42);
-        _modelPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ML", "Models", "StudentScoreModel.zip");
+        _logger = logger;
+        var basePath = AppContext.BaseDirectory;
+        _modelsPath = Path.Combine(basePath, "MLModels");
+        _datasetPath = Path.Combine(basePath, "Datasets");
+        
+        Directory.CreateDirectory(_modelsPath);
+        Directory.CreateDirectory(_datasetPath);
     }
 
-    public async Task<ModelMetricsDto> TrainAsync(string algorithm, IEnumerable<StudentInput> data, Action<string>? onStatusChange = null, CancellationToken cancellationToken = default)
+    public async Task<string> GenerateDatasetAsync(int recordCount, CancellationToken cancellationToken = default)
     {
-        await Task.Yield(); // Ensure we're not blocking
-
-        var dataList = data.ToList();
-        var dataView = _mlContext.Data.LoadFromEnumerable(dataList);
-
-        // Split data: 70% train, 15% validation, 15% test
-        var trainTestSplit = _mlContext.Data.TrainTestSplit(dataView, testFraction: 0.15, seed: 42);
-        var trainValidationSplit = _mlContext.Data.TrainTestSplit(trainTestSplit.TrainSet, testFraction: 0.176, seed: 42); // 0.176 of 0.85 ≈ 0.15
-
-        var trainingData = trainValidationSplit.TrainSet;
-        var validationData = trainValidationSplit.TestSet;
-        var testData = trainTestSplit.TestSet;
-
-        onStatusChange?.Invoke("Preparing Data");
-
-        // Define pipeline
-        var pipeline = CreatePipeline(algorithm);
-
-        onStatusChange?.Invoke("Training");
-
-        // Train model
-        var startTime = DateTime.UtcNow;
-        var model = pipeline.Fit(trainingData);
-        var trainingDuration = DateTime.UtcNow - startTime;
-
-        onStatusChange?.Invoke("Evaluating");
-
-        // Evaluate on test data
-        var predictions = model.Transform(testData);
-        var metrics = _mlContext.Regression.Evaluate(predictions);
-
-        var result = new ModelMetricsDto
+        try
         {
-            MAE = metrics.MeanAbsoluteError,
-            MSE = metrics.MeanSquaredError,
-            RMSE = Math.Sqrt(metrics.MeanSquaredError),
-            RSquared = metrics.RSquared,
-            TrainingDuration = trainingDuration,
-            DatasetSize = dataList.Count,
-            Algorithm = algorithm
-        };
+            _logger.LogInformation("Starting dataset generation with {RecordCount} records", recordCount);
+            
+            var generator = new DatasetGenerator();
+            var students = generator.GenerateStudents(recordCount);
+            
+            var fileName = $"student_dataset_{recordCount}_{DateTime.UtcNow:yyyyMMdd_HHmmss}.csv";
+            var filePath = Path.Combine(_datasetPath, fileName);
+            
+            await SaveToCsvAsync(students, filePath, cancellationToken);
+            
+            _logger.LogInformation("Dataset generated successfully: {FilePath}", filePath);
+            return filePath;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating dataset");
+            throw;
+        }
+    }
 
-        // Try to get feature importance if available
-        if (model.LastTransformer is FeatureImportanceCalculator featureImportance)
+    public async Task<TrainingResult> TrainModelAsync(
+        string datasetPath,
+        AlgorithmType algorithm,
+        string modelVersion,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _logger.LogInformation("Starting model training with algorithm {Algorithm}", algorithm);
+            
+            if (!File.Exists(datasetPath))
+                throw new FileNotFoundException("Dataset file not found", datasetPath);
+
+            var mlContext = new MLContext(seed: 0);
+            var dataView = await LoadFromCsvAsync(mlContext, datasetPath);
+
+            // Split data: 70% train, 15% validation, 15% test
+            var trainTestData = mlContext.Data.TrainTestSplit(dataView, testFraction: 0.3, seed: 0);
+            var trainValidationData = mlContext.Data.TrainTestSplit(trainTestData.TestSet, testFraction: 0.5, seed: 0);
+            
+            var trainingData = trainTestData.TrainSet;
+            var testData = trainValidationData.TestSet;
+
+            // Build pipeline
+            var pipeline = BuildPipeline(mlContext, algorithm);
+
+            _logger.LogInformation("Training model...");
+            var startTime = DateTime.UtcNow;
+            var model = pipeline.Fit(trainingData);
+            var endTime = DateTime.UtcNow;
+            _logger.LogInformation("Model training completed");
+
+            // Evaluate
+            var metrics = EvaluateModel(mlContext, model, testData);
+            
+            // Save model
+            var modelPath = SaveModel(model, modelVersion);
+
+            _logger.LogInformation("Model trained successfully. RMSE: {Rmse}, R²: {R2}", 
+                metrics.RootMeanSquaredError, metrics.RSquared);
+
+            return new TrainingResult
+            {
+                ModelPath = modelPath,
+                ModelVersion = modelVersion,
+                Algorithm = algorithm,
+                Metrics = new RegressionMetrics
+                {
+                    MeanAbsoluteError = metrics.MeanAbsoluteError,
+                    MeanSquaredError = metrics.MeanSquaredError,
+                    RootMeanSquaredError = metrics.RootMeanSquaredError,
+                    RSquared = metrics.RSquared
+                },
+                TrainingDuration = endTime - startTime,
+                DatasetSize = GetRowCount(datasetPath)
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error training model");
+            throw;
+        }
+    }
+
+    public PredictionResult Predict(StudentInput input)
+    {
+        try
+        {
+            if (_currentModel == null)
+                throw new InvalidOperationException("No model loaded. Please train a model first.");
+
+            var mlContext = new MLContext(seed: 0);
+            var predictionEngine = mlContext.Model.CreatePredictionEngine<StudentInput, PredictionOutput>(_currentModel);
+            
+            var startTime = DateTime.UtcNow;
+            var output = predictionEngine.Predict(input);
+            var duration = DateTime.UtcNow - startTime;
+
+            // Clamp prediction to 0-20 range
+            var clampedScore = Math.Max(0, Math.Min(20, output.FinalScore));
+
+            return new PredictionResult
+            {
+                PredictedScore = clampedScore,
+                ModelVersion = _currentModelVersion ?? "Unknown",
+                PredictionTime = startTime,
+                Duration = duration
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error making prediction");
+            throw;
+        }
+    }
+
+    public async Task<PredictionResult> PredictWithModelAsync(string modelPath, StudentInput input, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var mlContext = new MLContext(seed: 0);
+            var model = mlContext.Model.Load(modelPath, out var schema);
+            
+            var predictionEngine = mlContext.Model.CreatePredictionEngine<StudentInput, PredictionOutput>(model);
+            
+            var startTime = DateTime.UtcNow;
+            var output = predictionEngine.Predict(input);
+            var duration = DateTime.UtcNow - startTime;
+
+            // Clamp prediction to 0-20 range
+            var clampedScore = Math.Max(0, Math.Min(20, output.FinalScore));
+
+            return new PredictionResult
+            {
+                PredictedScore = clampedScore,
+                ModelVersion = Path.GetFileNameWithoutExtension(modelPath),
+                PredictionTime = startTime,
+                Duration = duration
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error making prediction with model {ModelPath}", modelPath);
+            throw;
+        }
+    }
+
+    public async Task<IEnumerable<ModelEvaluation>> CompareAlgorithmsAsync(string datasetPath, CancellationToken cancellationToken = default)
+    {
+        var results = new List<ModelEvaluation>();
+        var algorithms = Enum.GetValues<AlgorithmType>();
+
+        foreach (var algorithm in algorithms)
         {
             try
             {
-                var weights = model.LastTransformer.GetFeatureWeights();
-                result.FeatureImportance = new Dictionary<string, double>();
-                // Map weights to feature names (simplified)
-                var featureNames = new[] { "Age", "Gender", "StudyHours", "AttendanceRate", "HomeworkCompletionRate", 
-                    "PreviousAverage", "PreviousExamScore", "MidtermScore", "AbsenceDays", "SleepHours", 
-                    "ClassParticipation", "MobileUsageHours", "PracticeTestCount" };
+                var result = await TrainModelAsync(datasetPath, algorithm, $"temp_{algorithm}", cancellationToken);
                 
-                for (int i = 0; i < Math.Min(featureNames.Length, weights.Count); i++)
+                results.Add(new ModelEvaluation
                 {
-                    result.FeatureImportance[featureNames[i]] = Math.Abs(weights[i]);
-                }
+                    Algorithm = algorithm,
+                    MAE = result.Metrics.MeanAbsoluteError,
+                    MSE = result.Metrics.MeanSquaredError,
+                    RMSE = result.Metrics.RootMeanSquaredError,
+                    RSquared = result.Metrics.RSquared,
+                    TrainingDuration = result.TrainingDuration
+                });
+                
+                // Clean up temp model
+                var tempPath = Path.Combine(_modelsPath, $"temp_{algorithm}.zip");
+                if (File.Exists(tempPath))
+                    File.Delete(tempPath);
             }
-            catch
+            catch (Exception ex)
             {
-                // Feature importance not available for this model
+                _logger.LogWarning(ex, "Failed to train model with algorithm {Algorithm}", algorithm);
+                results.Add(new ModelEvaluation
+                {
+                    Algorithm = algorithm,
+                    Error = ex.Message
+                });
             }
         }
 
-        return result;
+        return results;
     }
 
-    private IEstimator<ITransformer> CreatePipeline(string algorithm)
+    public async Task LoadModelAsync(string modelPath, string version, CancellationToken cancellationToken = default)
     {
-        var pipeline = _mlContext.Transforms.CopyColumns(outputColumnName: "Label", inputColumnName: "FinalScore")
-            .Append(_mlContext.Transforms.ReplaceMissingValues())
-            .Append(_mlContext.Transforms.NormalizeMinMax())
-            .Append(_mlContext.Transforms.Concatenate("Features", nameof(StudentInput.Age), nameof(StudentInput.Gender),
-                nameof(StudentInput.StudyHours), nameof(StudentInput.AttendanceRate), nameof(StudentInput.HomeworkCompletionRate),
-                nameof(StudentInput.PreviousAverage), nameof(StudentInput.PreviousExamScore), nameof(StudentInput.MidtermScore),
-                nameof(StudentInput.AbsenceDays), nameof(StudentInput.SleepHours), nameof(StudentInput.ClassParticipation),
-                nameof(StudentInput.MobileUsageHours), nameof(StudentInput.PracticeTestCount)));
-
-        return algorithm switch
-        {
-            "SdcaRegression" => pipeline.Append(_mlContext.Regression.Trainers.Sdca()),
-            "FastForestRegression" => pipeline.Append(_mlContext.Regression.Trainers.FastForest()),
-            _ => pipeline.Append(_mlContext.Regression.Trainers.FastTree()) // Default to FastTree
-        };
+        var mlContext = new MLContext(seed: 0);
+        _currentModel = mlContext.Model.Load(modelPath, out var schema);
+        _currentModelVersion = version;
+        
+        _logger.LogInformation("Model loaded: {Version}", version);
     }
 
-    public void SaveModel(ITransformer model, string path)
+    public async Task<DatasetStatisticsDto> GetDatasetStatisticsAsync(string filePath, CancellationToken cancellationToken = default)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        _mlContext.Model.Save(model, _mlContext.DataView.Schema, path);
-        _trainedModel = model;
-    }
-
-    public ITransformer LoadModel(string path)
-    {
-        if (!File.Exists(path))
-        {
-            throw new FileNotFoundException($"Model file not found: {path}");
-        }
-
-        _trainedModel = _mlContext.Model.Load(path, out var schema);
-        return _trainedModel;
-    }
-
-    public float Predict(StudentInput input)
-    {
-        if (_trainedModel == null)
-        {
-            throw new InvalidOperationException("Model not loaded. Call LoadModel first.");
-        }
-
-        if (_predictionEngine == null)
-        {
-            _predictionEngine = _mlContext.Model.CreatePredictionEngine<StudentInput, StudentPrediction>(_trainedModel);
-        }
-
-        var prediction = _predictionEngine.Predict(input);
-        return Math.Max(0, Math.Min(20, prediction.Score)); // Clamp to [0, 20]
-    }
-
-    public async Task<IEnumerable<StudentInput>> GenerateDatasetAsync(int recordCount, string filePath, CancellationToken cancellationToken = default)
-    {
-        await Task.Yield();
-        var students = DatasetGenerator.Generate(recordCount).ToList();
-        DatasetGenerator.SaveToCsv(students, filePath);
-        return students;
-    }
-
-    public IEnumerable<StudentInput> LoadDataset(string filePath)
-    {
-        return DatasetGenerator.LoadFromCsv(filePath);
-    }
-
-    public DatasetStatisticsDto GetDatasetStatistics(string filePath)
-    {
-        var students = DatasetGenerator.LoadFromCsv(filePath).ToList();
+        var students = await LoadFromCsvAsync(filePath);
+        
+        var validStudents = students.Where(s => s.FinalScore >= 0 && s.FinalScore <= 20).ToList();
         
         var stats = new DatasetStatisticsDto
         {
-            RecordCount = students.Count,
-            MissingValues = students.Count(s => float.IsNaN(s.SleepHours) || float.IsNaN(s.ClassParticipation)),
-            Outliers = students.Count(s => s.StudyHours > 14 || s.AttendanceRate < 30),
-            FeatureStats = new Dictionary<string, FeatureStats>()
+            TotalRecords = validStudents.Count,
+            FeatureCount = 13,
+            MissingValues = students.Count(s => s.SleepHours == null || s.ClassParticipation == null),
+            MinValues = new Dictionary<string, float>
+            {
+                ["StudyHours"] = validStudents.Min(s => s.StudyHours),
+                ["AttendanceRate"] = validStudents.Min(s => s.AttendanceRate),
+                ["FinalScore"] = validStudents.Min(s => s.FinalScore)
+            },
+            MaxValues = new Dictionary<string, float>
+            {
+                ["StudyHours"] = validStudents.Max(s => s.StudyHours),
+                ["AttendanceRate"] = validStudents.Max(s => s.AttendanceRate),
+                ["FinalScore"] = validStudents.Max(s => s.FinalScore)
+            },
+            AverageValues = new Dictionary<string, float>
+            {
+                ["StudyHours"] = validStudents.Average(s => s.StudyHours),
+                ["AttendanceRate"] = validStudents.Average(s => s.AttendanceRate),
+                ["FinalScore"] = validStudents.Average(s => s.FinalScore)
+            }
         };
-
-        // Calculate statistics for each feature
-        if (students.Any())
-        {
-            stats.FeatureStats["StudyHours"] = new FeatureStats
-            {
-                Min = students.Min(s => s.StudyHours),
-                Max = students.Max(s => s.StudyHours),
-                Average = students.Average(s => s.StudyHours)
-            };
-
-            stats.FeatureStats["AttendanceRate"] = new FeatureStats
-            {
-                Min = students.Min(s => s.AttendanceRate),
-                Max = students.Max(s => s.AttendanceRate),
-                Average = students.Average(s => s.AttendanceRate)
-            };
-
-            stats.FeatureStats["FinalScore"] = new FeatureStats
-            {
-                Min = students.Min(s => s.FinalScore),
-                Max = students.Max(s => s.FinalScore),
-                Average = students.Average(s => s.FinalScore)
-            };
-        }
 
         return stats;
     }
-}
 
-public interface IMlService
-{
-    Task<ModelMetricsDto> TrainAsync(string algorithm, IEnumerable<StudentInput> data, Action<string>? onStatusChange = null, CancellationToken cancellationToken = default);
-    void SaveModel(ITransformer model, string path);
-    ITransformer LoadModel(string path);
-    float Predict(StudentInput input);
-    Task<IEnumerable<StudentInput>> GenerateDatasetAsync(int recordCount, string filePath, CancellationToken cancellationToken = default);
-    IEnumerable<StudentInput> LoadDataset(string filePath);
-    DatasetStatisticsDto GetDatasetStatistics(string filePath);
-}
+    private IEstimator<ITransformer> BuildPipeline(MLContext mlContext, AlgorithmType algorithm)
+    {
+        var pipeline = mlContext.Transforms.Conversion.MapValueToKey(nameof(StudentInput.Gender))
+            .Append(mlContext.Transforms.NormalizeMinMax(
+                nameof(StudentInput.Age),
+                nameof(StudentInput.StudyHours),
+                nameof(StudentInput.AttendanceRate),
+                nameof(StudentInput.HomeworkCompletionRate),
+                nameof(StudentInput.PreviousAverage),
+                nameof(StudentInput.PreviousExamScore),
+                nameof(StudentInput.MidtermScore),
+                nameof(StudentInput.AbsenceDays),
+                nameof(StudentInput.SleepHours),
+                nameof(StudentInput.ClassParticipation),
+                nameof(StudentInput.MobileUsageHours),
+                nameof(StudentInput.PracticeTestCount)))
+            .Append(mlContext.Transforms.Concatenate("Features",
+                nameof(StudentInput.Age),
+                nameof(StudentInput.StudyHours),
+                nameof(StudentInput.AttendanceRate),
+                nameof(StudentInput.HomeworkCompletionRate),
+                nameof(StudentInput.PreviousAverage),
+                nameof(StudentInput.PreviousExamScore),
+                nameof(StudentInput.MidtermScore),
+                nameof(StudentInput.AbsenceDays),
+                nameof(StudentInput.SleepHours),
+                nameof(StudentInput.ClassParticipation),
+                nameof(StudentInput.MobileUsageHours),
+                nameof(StudentInput.PracticeTestCount),
+                nameof(StudentInput.Gender)));
 
-public class ModelMetricsDto
-{
-    public double MAE { get; set; }
-    public double MSE { get; set; }
-    public double RMSE { get; set; }
-    public double RSquared { get; set; }
-    public TimeSpan TrainingDuration { get; set; }
-    public int DatasetSize { get; set; }
-    public string Algorithm { get; set; } = string.Empty;
-    public Dictionary<string, double>? FeatureImportance { get; set; }
+        switch (algorithm)
+        {
+            case AlgorithmType.SdcaRegression:
+                pipeline = pipeline.Append(mlContext.Regression.Trainers.Sdca());
+                break;
+            case AlgorithmType.FastTreeRegression:
+                pipeline = pipeline.Append(mlContext.Regression.Trainers.FastTree());
+                break;
+            case AlgorithmType.FastForestRegression:
+                pipeline = pipeline.Append(mlContext.Regression.Trainers.FastForest());
+                break;
+            default:
+                pipeline = pipeline.Append(mlContext.Regression.Trainers.FastTree());
+                break;
+        }
+
+        return pipeline.Append(mlContext.Transforms.Conversion.MapKeyToValue("PredictedLabel"));
+    }
+
+    private RegressionMetrics EvaluateModel(MLContext mlContext, ITransformer model, IDataView testData)
+    {
+        var predictions = model.Transform(testData);
+        return mlContext.Regression.Evaluate(predictions);
+    }
+
+    private string SaveModel(ITransformer model, string version)
+    {
+        var fileName = $"{version}.zip";
+        var filePath = Path.Combine(_modelsPath, fileName);
+        
+        using var fs = File.Create(filePath);
+        var mlContext = new MLContext(seed: 0);
+        mlContext.Model.Save(model, null, fs);
+        
+        _logger.LogInformation("Model saved to {FilePath}", filePath);
+        return filePath;
+    }
+
+    private int GetRowCount(string filePath)
+    {
+        var lines = File.ReadLines(filePath);
+        return lines.Count() - 1; // Exclude header
+    }
+
+    private async Task<List<StudentData>> LoadFromCsvAsync(string filePath)
+    {
+        var students = new List<StudentData>();
+        
+        await using var reader = new StreamReader(filePath);
+        var header = await reader.ReadLineAsync(); // Skip header
+        
+        while (!reader.EndOfStream)
+        {
+            var line = await reader.ReadLineAsync();
+            if (string.IsNullOrWhiteSpace(line)) continue;
+
+            var parts = line.Split(',');
+            if (parts.Length < 14) continue;
+
+            students.Add(new StudentData
+            {
+                Id = int.Parse(parts[0]),
+                FirstName = parts[1],
+                LastName = parts[2],
+                Age = int.Parse(parts[3]),
+                Gender = parts[4] == "Male" ? Gender.Male : Gender.Female,
+                StudyHours = float.Parse(parts[5], CultureInfo.InvariantCulture),
+                AttendanceRate = float.Parse(parts[6], CultureInfo.InvariantCulture),
+                HomeworkCompletionRate = float.Parse(parts[7], CultureInfo.InvariantCulture),
+                PreviousAverage = float.Parse(parts[8], CultureInfo.InvariantCulture),
+                PreviousExamScore = float.Parse(parts[9], CultureInfo.InvariantCulture),
+                MidtermScore = float.Parse(parts[10], CultureInfo.InvariantCulture),
+                AbsenceDays = int.Parse(parts[11]),
+                SleepHours = string.IsNullOrEmpty(parts[12]) ? null : float.Parse(parts[12], CultureInfo.InvariantCulture),
+                ClassParticipation = string.IsNullOrEmpty(parts[13]) ? null : float.Parse(parts[13], CultureInfo.InvariantCulture),
+                MobileUsageHours = float.Parse(parts[14], CultureInfo.InvariantCulture),
+                PracticeTestCount = int.Parse(parts[15]),
+                FinalScore = float.Parse(parts[16], CultureInfo.InvariantCulture)
+            });
+        }
+
+        return students;
+    }
+
+    private async Task<IDataView> LoadFromCsvAsync(MLContext mlContext, string filePath)
+    {
+        return mlContext.Data.LoadFromTextFile<StudentInput>(
+            path: filePath,
+            hasHeader: true,
+            separatorChar: ',');
+    }
+
+    private async Task SaveToCsvAsync(List<StudentData> students, string filePath, CancellationToken cancellationToken)
+    {
+        await using var writer = new StreamWriter(filePath);
+        
+        // Write header
+        await writer.WriteLineAsync("Id,FirstName,LastName,Age,Gender,StudyHours,AttendanceRate,HomeworkCompletionRate,PreviousAverage,PreviousExamScore,MidtermScore,AbsenceDays,SleepHours,ClassParticipation,MobileUsageHours,PracticeTestCount,FinalScore");
+        
+        foreach (var student in students)
+        {
+            if (cancellationToken.IsCancellationRequested)
+                cancellationToken.ThrowIfCancellationRequested();
+
+            var sleepHours = student.SleepHours.HasValue ? student.SleepHours.Value.ToString(CultureInfo.InvariantCulture) : "";
+            var classParticipation = student.ClassParticipation.HasValue ? student.ClassParticipation.Value.ToString(CultureInfo.InvariantCulture) : "";
+
+            await writer.WriteLineAsync($"{student.Id},{student.FirstName},{student.LastName},{student.Age},{student.Gender},{student.StudyHours.ToString(CultureInfo.InvariantCulture)},{student.AttendanceRate.ToString(CultureInfo.InvariantCulture)},{student.HomeworkCompletionRate.ToString(CultureInfo.InvariantCulture)},{student.PreviousAverage.ToString(CultureInfo.InvariantCulture)},{student.PreviousExamScore.ToString(CultureInfo.InvariantCulture)},{student.MidtermScore.ToString(CultureInfo.InvariantCulture)},{student.AbsenceDays},{sleepHours},{classParticipation},{student.MobileUsageHours.ToString(CultureInfo.InvariantCulture)},{student.PracticeTestCount},{student.FinalScore.ToString(CultureInfo.InvariantCulture)}");
+        }
+    }
 }

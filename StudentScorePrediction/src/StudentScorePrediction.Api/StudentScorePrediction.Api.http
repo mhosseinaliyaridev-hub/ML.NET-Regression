@@ -1,4 +1,4 @@
-@StudentScorePrediction.Api_HostAddress = http://localhost:5226
+@StudentScorePrediction.Api_HostAddress = http://localhost:5132
 
 GET {{StudentScorePrediction.Api_HostAddress}}/weatherforecast/
 Accept: application/json
