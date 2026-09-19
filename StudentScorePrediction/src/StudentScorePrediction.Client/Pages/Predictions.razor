@@ -1,0 +1,140 @@
+@page "/predictions"
+@using StudentScorePrediction.Client.Services
+@inject IPredictionService PredictionService
+
+<MudText Typo="Typo.h4" Class="mb-4">تاریخچه پیش‌بینی‌ها</MudText>
+
+<MudPaper Class="pa-4 mb-4">
+    <MudGrid Spacing="3">
+        <MudItem xs="12" md="4">
+            <MudTextField @bind-Value="searchTerm" Label="جستجو (نام دانش‌آموز)" Variant="Variant.Outlined" />
+        </MudItem>
+        <MudItem xs="12" md="3">
+            <MudSelect T="string" @bind-Value="statusFilter" Label="فیلتر وضعیت" Variant="Variant.Outlined" Clearable="true">
+                <MudSelectItem Value="">همه</MudSelectItem>
+                <MudSelectItem Value="excellent">عالی (۱۷.۵+)</MudSelectItem>
+                <MudSelectItem Value="good">خوب (۱۵-۱۷.۵)</MudSelectItem>
+                <MudSelectItem Value="average">متوسط (۱۲-۱۵)</MudSelectItem>
+                <MudSelectItem Value="weak">ضعیف (زیر ۱۲)</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" md="3">
+            <MudDatePicker @bind-Value="dateFilter" Label="تاریخ" Variant="Variant.Outlined" />
+        </MudItem>
+        <MudItem xs="12" md="2" Class="d-flex align-end">
+            <MudButton Color="Color.Primary" OnClick="ApplyFiltersAsync" FullWidth="true">اعمال فیلتر</MudButton>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+<MudPaper Class="pa-4">
+    @if (loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+    }
+    else if (predictions.Any())
+    {
+        <MudDataGrid T="PredictionHistoryDto" Items="predictions" ReadOnly="true" Hover="true" 
+                     TotalItems="totalCount" ServerData="ServerReload">
+            <Columns>
+                <PropertyColumn Property="x => x.StudentName" Sortable="true" />
+                <PropertyColumn Property="x => x.PredictedScore" Sortable="true">
+                    <CellContext>
+                        @{
+                            var score = context.Item.PredictedScore;
+                            var color = score >= 17.5 ? "success" : score >= 15 ? "info" : score >= 12 ? "warning" : "error";
+                        }
+                        <MudChip T="string" Color="@((Color)Enum.Parse(typeof(Color), color))" Size="Size.Small">
+                            @score.ToString("F2")
+                        </MudChip>
+                    </CellContext>
+                </PropertyColumn>
+                <PropertyColumn Property="x => x.ModelVersion" Sortable="true" />
+                <PropertyColumn Property="x => x.Algorithm" Sortable="true" />
+                <PropertyColumn Property="x => x.DurationMs" Sortable="true">
+                    <CellContext>@context.Item.DurationMs میلی‌ثانیه</CellContext>
+                </PropertyColumn>
+                <PropertyColumn Property="x => x.PredictionDate" Sortable="true">
+                    <CellContext>@context.Item.PredictionDate.ToString("yyyy/MM/dd HH:mm")</CellContext>
+                </PropertyColumn>
+                <TemplateColumn Width="100px">
+                    <CellContent>
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" 
+                                       OnClick="() => DeletePrediction(context.Item.Id)" Size="Size.Small" />
+                    </CellContent>
+                </TemplateColumn>
+            </Columns>
+            <PagerContent>
+                <MudDataGridPager T="PredictionHistoryDto" />
+            </PagerContent>
+        </MudDataGrid>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Info">هیچ پیش‌بینی یافت نشد.</MudAlert>
+    }
+</MudPaper>
+
+@code {
+    private List<PredictionHistoryDto> predictions = new();
+    private int totalCount;
+    private bool loading;
+    private string searchTerm = "";
+    private string? statusFilter;
+    private DateTime? dateFilter;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ReloadDataAsync();
+    }
+
+    private async Task ApplyFiltersAsync()
+    {
+        await ReloadDataAsync();
+    }
+
+    private async Task ReloadDataAsync()
+    {
+        loading = true;
+        try
+        {
+            // Implement filter logic here
+            await LoadPredictionsAsync(0, 10);
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task LoadPredictionsAsync(int page, int pageSize)
+    {
+        loading = true;
+        try
+        {
+            var result = await PredictionService.GetPredictionsAsync(page, pageSize, searchTerm);
+            predictions = result.Items.ToList();
+            totalCount = result.TotalCount;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task ServerReload(DataGridState<PredictionHistoryDto> state)
+    {
+        await LoadPredictionsAsync(state.Page ?? 0, state.PageSize ?? 10);
+        return new DataGridResult<PredictionHistoryDto> { Items = predictions, TotalItems = totalCount };
+    }
+
+    private async Task DeletePrediction(int id)
+    {
+        var confirmed = await DialogService.ShowMessageBox("تأیید حذف", "آیا از حذف این پیش‌بینی اطمینان دارید؟", yesText: "بله", noText: "خیر");
+        if (confirmed == true)
+        {
+            await PredictionService.DeletePredictionAsync(id);
+            await ReloadDataAsync();
+        }
+    }
+}

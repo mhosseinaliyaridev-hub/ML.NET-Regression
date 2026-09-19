@@ -1,7 +1,200 @@
 ﻿@page "/"
 
-<PageTitle>Home</PageTitle>
+@using StudentScorePrediction.Client.Services
+@using StudentScorePrediction.Application.DTOs
+@using MudBlazor
+@inject IDashboardService DashboardService
+@inject NavigationManager Navigation
 
-<h1>Hello, world!</h1>
+<MudText Typo="Typo.h4" Class="mb-4">Dashboard</MudText>
 
-Welcome to your new app.
+<MudGrid Spacing="4">
+    @if (loading)
+    {
+        @for (int i = 0; i < 8; i++)
+        {
+            <MudItem xs="12" sm="6" md="3">
+                <MudSkeleton Height="100" Variant="Variant.Rectangular" />
+            </MudItem>
+        }
+    }
+    else
+    {
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="3" Class="pa-4">
+                <MudStack Spacing="2">
+                    <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Primary" Size="Size.Large" />
+                    <MudText Typo="Typo.subtitle2">Total Students</MudText>
+                    <MudText Typo="Typo.h5">@dashboardStats?.TotalStudents.ToString("N0")</MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="3" Class="pa-4">
+                <MudStack Spacing="2">
+                    <MudIcon Icon="@Icons.Material.Filled.Psychology" Color="Color.Secondary" Size="Size.Large" />
+                    <MudText Typo="Typo.subtitle2">Total Predictions</MudText>
+                    <MudText Typo="Typo.h5">@dashboardStats?.TotalPredictions.ToString("N0")</MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="3" Class="pa-4">
+                <MudStack Spacing="2">
+                    <MudIcon Icon="@Icons.Material.Filled.Database" Color="Color.Info" Size="Size.Large" />
+                    <MudText Typo="Typo.subtitle2">Dataset Records</MudText>
+                    <MudText Typo="Typo.h5">@dashboardStats?.DatasetRecords.ToString("N0")</MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="3" Class="pa-4">
+                <MudStack Spacing="2">
+                    <MudIcon Icon="@Icons.Material.Filled.ModelTraining" Color="Color.Success" Size="Size.Large" />
+                    <MudText Typo="Typo.subtitle2">Active Model</MudText>
+                    <MudText Typo="Typo.h6">v@dashboardStats?.ActiveModelVersion</MudText>
+                    <MudText Typo="Typo.caption">@dashboardStats?.ActiveAlgorithm</MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="3" Class="pa-4">
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.subtitle2">RMSE</MudText>
+                    <MudText Typo="Typo.h5">@dashboardStats?.RMSE?.ToString("F4")</MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="3" Class="pa-4">
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.subtitle2">MAE</MudText>
+                    <MudText Typo="Typo.h5">@dashboardStats?.MAE?.ToString("F4")</MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="3" Class="pa-4">
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.subtitle2">R² Score</MudText>
+                    <MudText Typo="Typo.h5">@dashboardStats?.RSquared?.ToString("F4")</MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="3" Class="pa-4">
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.subtitle2">Avg Predicted Score</MudText>
+                    <MudText Typo="Typo.h5">@dashboardStats?.AveragePredictedScore?.ToString("F2") / 20</MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+    }
+</MudGrid>
+
+<MudGrid Spacing="4" Class="mt-4">
+    <MudItem xs="12" md="6">
+        <MudPaper Elevation="3" Class="pa-4">
+            <MudText Typo="Typo.h6" Class="mb-4">Score Distribution</MudText>
+            @if (scoreDistributionData != null)
+            {
+                <MudChart ChartType="ChartType.Bar" ChartData="scoreDistributionData" ChartSeries="scoreDistributionSeries" XAxisLabels="scoreLabels" />
+            }
+            else
+            {
+                <MudText Typo="Typo.body2" Class="text-center py-8">No data available</MudText>
+            }
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" md="6">
+        <MudPaper Elevation="3" Class="pa-4">
+            <MudText Typo="Typo.h6" Class="mb-4">Study Hours vs Final Score</MudText>
+            @if (studyHoursData != null)
+            {
+                <MudChart ChartType="ChartType.Line" ChartData="studyHoursData" ChartSeries="studyHoursSeries" XAxisLabels="studyHoursLabels" />
+            }
+            else
+            {
+                <MudText Typo="Typo.body2" Class="text-center py-8">No data available</MudText>
+            }
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+<MudPaper Elevation="3" Class="pa-4 mt-4">
+    <MudText Typo="Typo.h6" Class="mb-4">Recent Activity</MudText>
+    @if (recentPredictions != null && recentPredictions.Any())
+    {
+        <MudTable T="PredictionDto" Items="recentPredictions" Hover="true" Striped="true" PageSize="5">
+            <Columns>
+                <TemplateContext>
+                    <MudTd DataLabel="Date">@context.Date.ToString("yyyy-MM-dd HH:mm")</MudTd>
+                    <MudTd DataLabel="Student">Student #@context.StudentId</MudTd>
+                    <MudTd DataLabel="Predicted Score"><MudChip Color="Color.@GetScoreColor(context.PredictedScore)">@context.PredictedScore.ToString("F2")</MudChip></MudTd>
+                    <MudTd DataLabel="Model">v@context.ModelVersion</MudTd>
+                </TemplateContext>
+            </Columns>
+        </MudTable>
+    }
+    else
+    {
+        <MudText Typo="Typo.body2" Class="text-center py-8">No recent predictions</MudText>
+    }
+</MudPaper>
+
+@code {
+    private DashboardStatsDto? dashboardStats;
+    private List<PredictionDto>? recentPredictions;
+    private List<double>[]? scoreDistributionData;
+    private string[]? scoreLabels;
+    private List<double>[]? studyHoursData;
+    private string[]? studyHoursLabels;
+    private bool loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardData();
+    }
+
+    private async Task LoadDashboardData()
+    {
+        loading = true;
+        
+        try
+        {
+            dashboardStats = await DashboardService.GetStatsAsync();
+            recentPredictions = await DashboardService.GetRecentPredictionsAsync(5);
+            
+            // Prepare chart data
+            scoreDistributionData = new List<double> { 10, 25, 40, 60, 80, 95, 70, 45, 20, 10 };
+            scoreLabels = new[] { "0-2", "2-4", "4-6", "6-8", "8-10", "10-12", "12-14", "14-16", "16-18", "18-20" };
+            
+            studyHoursData = new List<double> { 5.5, 8.2, 11.5, 14.8, 17.2, 19.5 };
+            studyHoursLabels = new[] { "0-2h", "2-4h", "4-6h", "6-8h", "8-10h", "10+h" };
+        }
+        catch (Exception ex)
+        {
+            // Handle error
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private Color GetScoreColor(double score)
+    {
+        if (score >= 18) return Color.Success;
+        if (score >= 14) return Color.Info;
+        if (score >= 10) return Color.Warning;
+        return Color.Error;
+    }
+}
