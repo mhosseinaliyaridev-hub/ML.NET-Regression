@@ -1,0 +1,285 @@
+@page "/training"
+@using StudentScorePrediction.Client.Services
+@inject ITrainingService TrainingService
+@inject IModelService ModelService
+
+<MudText Typo="Typo.h4" Class="mb-4">آموزش مدل</MudText>
+
+<MudGrid Spacing="4">
+    <MudItem xs="12" md="6">
+        <MudPaper Class="pa-4">
+            <MudText Typo="Typo.h6" Class="mb-4">تنظیمات آموزش</MudText>
+            
+            <MudForm @ref="form">
+                <MudSelect T="string" @bind-Value="selectedAlgorithm" Label="الگوریتم" Variant="Variant.Outlined" Required="true" Class="mb-4">
+                    <MudSelectItem Value="FastTree">FastTree Regression</MudSelectItem>
+                    <MudSelectItem Value="FastForest">FastForest Regression</MudSelectItem>
+                    <MudSelectItem Value="SDCA">SDCA Regression</MudSelectItem>
+                </MudSelect>
+                
+                <MudNumericField @bind-Value="testSizePercent" Label="درصد داده تست" Min="5" Max="30" 
+                                 HelperText="باقی‌مانده برای آموزش" Variant="Variant.Outlined" Class="mb-4" Disabled="true" />
+                
+                <MudAlert Severity="Severity.Info" Class="mb-4">
+                    <MudText Typo="Typo.body2">
+                        <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" Class="ml-1" />
+                        داده‌ها به صورت خودکار به ۷۰٪ آموزش، ۱۵٪ اعتبارسنجی و ۱۵٪ تست تقسیم می‌شوند.
+                    </MudText>
+                </MudAlert>
+                
+                @if (datasetStats != null)
+                {
+                    <MudPaper Class="pa-3 grey lighten-4 mb-4">
+                        <MudText Typo="Typo.subtitle2" Class="mb-2">اطلاعات Dataset</MudText>
+                        <MudGrid Spacing="2">
+                            <MudItem xs="6"><MudText Typo="Typo.caption">تعداد رکوردها:</MudText></MudItem>
+                            <MudItem xs="6"><MudText Typo="Typo.body1">@datasetStats.TotalRecords.ToString("N0")</MudText></MudItem>
+                            
+                            <MudItem xs="6"><MudText Typo="Typo.caption">تعداد Featureها:</MudText></MudItem>
+                            <MudItem xs="6"><MudText Typo="Typo.body1">@datasetStats.FeatureCount</MudText></MudItem>
+                            
+                            <MudItem xs="6"><MudText Typo="Typo.caption">مقادیر Missing:</MudText></MudItem>
+                            <MudItem xs="6"><MudText Typo="Typo.body1">@datasetStats.MissingValues</MudText></MudItem>
+                            
+                            <MudItem xs="6"><MudText Typo="Typo.caption">نرخ حضور میانگین:</MudText></MudItem>
+                            <MudItem xs="6"><MudText Typo="Typo.body1">@datasetStats.AverageAttendanceRate?.ToString("F1")%</MudText></MudItem>
+                        </MudGrid>
+                    </MudPaper>
+                }
+                
+                <MudButton Color="Color.Primary" Size="Large" OnClick="StartTrainingAsync" 
+                           Disabled="@(trainingInProgress || !form.IsValid)" FullWidth="true"
+                           StartIcon="@(trainingInProgress ? Icons.Material.Filled.PlayArrow : Icons.Material.Filled.AutoAwesome)">
+                    @if (trainingInProgress)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="ml-2" />
+                        <span class="mr-2">در حال آموزش...</span>
+                    }
+                    else
+                    {
+                        شروع آموزش مدل
+                    }
+                </MudButton>
+            </MudForm>
+        </MudPaper>
+        
+        @if (trainingStatus != null && trainingInProgress)
+        {
+            <MudPaper Class="pa-4 mt-4">
+                <MudText Typo="Typo.h6" Class="mb-3">وضعیت آموزش</MudText>
+                
+                <MudProgressLinear Color="Color.Primary" Value="@progressValue" BufferValue="@bufferValue" 
+                                   Class="mb-3" Height="10" />
+                
+                <MudGrid Spacing="2">
+                    <MudItem xs="6">
+                        <MudText Typo="Typo.caption">وضعیت فعلی:</MudText>
+                        <MudChip T="string" Color="Color.Primary" Size="Size.Small">@trainingStatus.CurrentStatus</MudChip>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudText Typo="Typo.caption">زمان سپری شده:</MudText>
+                        <MudText Typo="Typo.body2">@elapsedTime</MudText>
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
+        }
+    </MudItem>
+    
+    <MudItem xs="12" md="6">
+        @if (trainingResult != null)
+        {
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.h6" Class="mb-4">نتایج آموزش</MudText>
+                
+                <MudAlert Severity="Severity.Success" Class="mb-4">
+                    <MudText Typo="Typo.body1">آموزش با موفقیت完成 شد!</MudText>
+                </MudAlert>
+                
+                <MudGrid Spacing="3">
+                    <MudItem xs="12">
+                        <MudPaper Class="pa-3 text-center" Style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                            <MudText Typo="Typo.subtitle1">نسخه مدل جدید</MudText>
+                            <MudText Typo="Typo.h4" Class="mt-2">@trainingResult.ModelVersion</MudText>
+                        </MudPaper>
+                    </MudItem>
+                    
+                    <MudItem xs="6" sm="3" v-for="metric in metrics">
+                        <MudPaper Class="pa-3 text-center">
+                            <MudText Typo="Typo.caption">@metric.Label</MudText>
+                            <MudText Typo="Typo.h6" Class="mt-1">@metric.Value</MudText>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+                
+                <MudDivider Class="my-4" />
+                
+                <MudText Typo="Typo.subtitle2" Class="mb-2">Metricهای مدل</MudText>
+                <MudSimpleTable Hover="true" Dense="true">
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>مقدار</th>
+                            <th>توضیح</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><MudChip T="string" Size="Size.Small" Color="Color.Primary">MAE</MudChip></td>
+                            <td>@trainingResult.Metrics.MAE.ToString("F4")</td>
+                            <td><MudText Typo="Typo.caption">میانگین خطای مطلق</MudText></td>
+                        </tr>
+                        <tr>
+                            <td><MudChip T="string" Size="Size.Small" Color="Color.Secondary">MSE</MudChip></td>
+                            <td>@trainingResult.Metrics.MSE.ToString("F4")</td>
+                            <td><MudText Typo="Typo.caption">میانگین مربعات خطا</MudText></td>
+                        </tr>
+                        <tr>
+                            <td><MudChip T="string" Size="Size.Small" Color="Color.Tertiary">RMSE</MudChip></td>
+                            <td>@trainingResult.Metrics.RMSE.ToString("F4")</td>
+                            <td><MudText Typo="Typo.caption">ریشه میانگین مربعات خطا</MudText></td>
+                        </tr>
+                        <tr>
+                            <td><MudChip T="string" Size="Size.Small" Color="Color.Info">R²</MudChip></td>
+                            <td>@trainingResult.Metrics.RSquared.ToString("F4")</td>
+                            <td><MudText Typo="Typo.caption">ضریب تعیین</MudText></td>
+                        </tr>
+                    </tbody>
+                </MudSimpleTable>
+                
+                <div class="mt-4 d-flex justify-end">
+                    <MudButton Color="Color.Success" OnClick="ActivateModelAsync" 
+                               StartIcon="@Icons.Material.Filled.CheckCircle">
+                        فعال‌سازی این مدل
+                    </MudButton>
+                </div>
+            </MudPaper>
+        }
+        else
+        {
+            <MudPaper Class="pa-4 text-center" Style="min-height: 400px; display: flex; align-items: center; justify-content: center;">
+                <div>
+                    <MudIcon Icon="@Icons.Material.Filled.School" Style="font-size: 80px; opacity: 0.3;" />
+                    <MudText Typo="Typo.h6" Class="mt-4" Style="opacity: 0.6;">مدل را آموزش دهید تا نتایج نمایش داده شود</MudText>
+                </div>
+            </MudPaper>
+        }
+    </MudItem>
+</MudGrid>
+
+@code {
+    private MudForm form;
+    private bool trainingInProgress;
+    private string selectedAlgorithm = "FastTree";
+    private double testSizePercent = 30;
+    private DatasetStatisticsDto? datasetStats;
+    private TrainingStatusDto? trainingStatus;
+    private TrainingResultDto? trainingResult;
+    private double progressValue;
+    private double bufferValue;
+    private string elapsedTime = "00:00:00";
+    
+    private List<(string Label, string Value)> metrics = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDatasetStatsAsync();
+    }
+
+    private async Task LoadDatasetStatsAsync()
+    {
+        try
+        {
+            datasetStats = await TrainingService.GetDatasetStatisticsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"خطا در بارگذاری آمار: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task StartTrainingAsync()
+    {
+        if (!form.IsValid) return;
+        
+        trainingInProgress = true;
+        trainingResult = null;
+        progressValue = 0;
+        bufferValue = 10;
+        elapsedTime = "00:00:00";
+        
+        try
+        {
+            // شروع آموزش
+            var trainingId = await TrainingService.StartTrainingAsync(selectedAlgorithm);
+            
+            // Polling برای وضعیت
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            while (trainingInProgress)
+            {
+                trainingStatus = await TrainingService.GetTrainingStatusAsync(trainingId);
+                
+                // Update progress (simulated based on status)
+                progressValue = trainingStatus.CurrentStatus switch
+                {
+                    "Loading Data" => 10,
+                    "Preparing Data" => 25,
+                    "Training" => 50 + (stopwatch.ElapsedMilliseconds % 30000) / 1000,
+                    "Evaluating" => 85,
+                    "Saving Model" => 95,
+                    "Completed" => 100,
+                    _ => 5
+                };
+                
+                bufferValue = Math.Min(progressValue + 10, 100);
+                elapsedTime = stopwatch.Elapsed.ToString(@"hh\:mm\:ss");
+                
+                if (trainingStatus.IsCompleted)
+                {
+                    trainingResult = trainingStatus.Result;
+                    trainingInProgress = false;
+                    
+                    // Populate metrics
+                    if (trainingResult != null)
+                    {
+                        metrics = new List<(string, string)>
+                        {
+                            ("MAE", trainingResult.Metrics.MAE.ToString("F3")),
+                            ("RMSE", trainingResult.Metrics.RMSE.ToString("F3")),
+                            ("R²", trainingResult.Metrics.RSquared.ToString("F3")),
+                            ("Duration", trainingResult.TrainingDuration.ToString(@"hh\:mm\:ss"))
+                        };
+                    }
+                    
+                    Snackbar.Add("آموزش مدل با موفقیت完成 شد!", Severity.Success);
+                }
+                else if (trainingStatus.IsFailed)
+                {
+                    trainingInProgress = false;
+                    Snackbar.Add($"آموزش شکست خورد: {trainingStatus.ErrorMessage}", Severity.Error);
+                }
+                
+                await Task.Delay(1000);
+            }
+        }
+        catch (Exception ex)
+        {
+            trainingInProgress = false;
+            Snackbar.Add($"خطا در آموزش: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ActivateModelAsync()
+    {
+        if (trainingResult == null) return;
+        
+        try
+        {
+            await ModelService.ActivateModelAsync(trainingResult.ModelVersionId);
+            Snackbar.Add("مدل با موفقیت فعال شد!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"خطا در فعال‌سازی: {ex.Message}", Severity.Error);
+        }
+    }
+}

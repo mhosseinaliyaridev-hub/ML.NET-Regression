@@ -1,0 +1,256 @@
+@page "/dataset"
+@using StudentScorePrediction.Client.Services
+@inject IDatasetService DatasetService
+
+<MudText Typo="Typo.h4" Class="mb-4">مدیریت Dataset</MudText>
+
+<MudGrid Spacing="4">
+    <MudItem xs="12" md="6">
+        <MudPaper Class="pa-4">
+            <MudText Typo="Typo.h6" Class="mb-4">تولید Dataset جدید</MudText>
+            
+            <MudForm @ref="generateForm">
+                <MudNumericField @bind-Value="recordCount" Label="تعداد رکوردها" 
+                                 Min="10000" Max="500000" Step="10000" 
+                                 HelperText="حداقل ۱۰,۰۰۰ - حداکثر ۵۰۰,۰۰۰"
+                                 Variant="Variant.Outlined" Required="true" Class="mb-4" />
+                
+                <MudAlert Severity="Severity.Info" Class="mb-4">
+                    <MudText Typo="Typo.body2">
+                        <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" Class="ml-1" />
+                        داده‌ها با روابط منطقی واقعی تولید می‌شوند. مثلاً:
+                        <br/>• ساعات مطالعه بیشتر → نمره بالاتر
+                        <br/>• نرخ حضور بیشتر → نمره بهتر
+                        <br/>• غیبت بیشتر → اثر منفی
+                    </MudText>
+                </MudAlert>
+                
+                <MudButton Color="Color.Primary" OnClick="GenerateDatasetAsync" 
+                           Disabled="@(generating || !generateForm.IsValid)" FullWidth="true"
+                           StartIcon="@(generating ? Icons.Material.Filled.Refresh : Icons.Material.Filled.Dataset)">
+                    @if (generating)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="ml-2" />
+                        <span class="mr-2">در حال تولید...</span>
+                    }
+                    else
+                    {
+                        تولید Dataset
+                    }
+                </MudButton>
+            </MudForm>
+        </MudPaper>
+        
+        @if (generationProgress != null && generating)
+        {
+            <MudPaper Class="pa-4 mt-4">
+                <MudText Typo="Typo.h6" Class="mb-3">وضعیت تولید</MudText>
+                <MudProgressLinear Color="Color.Secondary" Value="@generationProgress" Indeterminate="false" Class="mb-3" />
+                <MudText Typo="Typo.body2">@generationMessage</MudText>
+            </MudPaper>
+        }
+    </MudItem>
+    
+    <MudItem xs="12" md="6">
+        <MudPaper Class="pa-4">
+            <MudText Typo="Typo.h6" Class="mb-4">Upload فایل CSV</MudText>
+            
+            <MudFileUpload T="IBrowserFile" @ref="fileUpload" ButtonText="انتخاب فایل" 
+                           Accept=".csv" MaxFileSize="104857600" Class="mb-4">
+                <MudButton ComponentType="ComponentType.Button" Color="Color.Secondary" EndIcon="@Icons.Material.Filled.CloudUpload">
+                    انتخاب فایل CSV
+                </MudButton>
+            </MudFileUpload>
+            
+            @if (uploadedFile != null)
+            {
+                <MudAlert Severity="Severity.Success" Class="mb-3">
+                    فایل @uploadedFile.Name انتخاب شد (@(uploadedFile.Size / 1024) KB)
+                </MudAlert>
+                
+                <MudButton Color="Color.Secondary" OnClick="UploadFileAsync" FullWidth="true"
+                           StartIcon="@Icons.Material.Filled.Upload">
+                    آپلود و پردازش
+                </MudButton>
+            }
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@if (statistics != null)
+{
+    <MudPaper Class="pa-4 mt-4">
+        <MudText Typo="Typo.h6" Class="mb-4">آمار Dataset فعلی</MudText>
+        
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Class="pa-3 text-center grey lighten-4">
+                    <MudIcon Icon="@Icons.Material.Filled.TableRows" Color="Color.Primary" />
+                    <MudText Typo="Typo.h5" Class="mt-2">@statistics.TotalRecords.ToString("N0")</MudText>
+                    <MudText Typo="Typo.caption">کل رکوردها</MudText>
+                </MudPaper>
+            </MudItem>
+            
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Class="pa-3 text-center grey lighten-4">
+                    <MudIcon Icon="@Icons.Material.Filled.Tune" Color="Color.Secondary" />
+                    <MudText Typo="Typo.h5" Class="mt-2">@statistics.FeatureCount</MudText>
+                    <MudText Typo="Typo="caption">تعداد Featureها</MudText>
+                </MudPaper>
+            </MudItem>
+            
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Class="pa-3 text-center grey lighten-4">
+                    <MudIcon Icon="@Icons.Material.Filled.Warning" Color="@(statistics.MissingValues > 0 ? Color.Warning : Color.Success)" />
+                    <MudText Typo="Typo.h5" Class="mt-2">@statistics.MissingValues</MudText>
+                    <MudText Typo="Typo.caption">مقادیر Missing</MudText>
+                </MudPaper>
+            </MudItem>
+            
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Class="pa-3 text-center grey lighten-4">
+                    <MudIcon Icon="@Icons.Material.Filled.BubbleChart" Color="Color.Info" />
+                    <MudText Typo="Typo.h5" Class="mt-2">@statistics.OutliersCount</MudText>
+                    <MudText Typo="Typo.caption">Outlierها</MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+        
+        <MudDivider Class="my-4" />
+        
+        <MudText Typo="Typo.subtitle1" Class="mb-3">آمار تفصیلی Featureها</MudText>
+        <MudSimpleTable Hover="true" Dense="true">
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Min</th>
+                    <th>Max</th>
+                    <th>Average</th>
+                    <th>Std Dev</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (statistics.FeatureStatistics != null)
+                {
+                    @foreach (var stat in statistics.FeatureStatistics.Take(7))
+                    {
+                        <tr>
+                            <td><MudChip T="string" Size="Size.Small">@stat.FeatureName</MudChip></td>
+                            <td>@stat.MinValue.ToString("F2")</td>
+                            <td>@stat.MaxValue.ToString("F2")</td>
+                            <td>@stat.Average.ToString("F2")</td>
+                            <td>@stat.StdDev.ToString("F2")</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </MudSimpleTable>
+        
+        @if (statistics.FeatureStatistics?.Count > 7)
+        {
+            <MudText Typo="Typo.caption" Class="mt-2 text-muted">
+                و @(statistics.FeatureStatistics.Count - 7) Feature دیگر...
+            </MudText>
+        }
+    </MudPaper>
+}
+
+@code {
+    private MudForm generateForm;
+    private MudFileUpload<IBrowserFile> fileUpload;
+    private bool generating;
+    private double recordCount = 100000;
+    private double? generationProgress;
+    private string generationMessage = "";
+    private IBrowserFile? uploadedFile;
+    private DatasetStatisticsDto? statistics;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadStatisticsAsync();
+    }
+
+    private async Task LoadStatisticsAsync()
+    {
+        try
+        {
+            statistics = await DatasetService.GetStatisticsAsync();
+        }
+        catch (Exception ex)
+        {
+            // Dataset may not exist yet
+        }
+    }
+
+    private async Task GenerateDatasetAsync()
+    {
+        if (!generateForm.IsValid) return;
+        
+        generating = true;
+        generationProgress = 0;
+        generationMessage = "در حال آماده‌سازی...";
+        
+        try
+        {
+            // Simulate progress updates
+            var progressTask = Task.Run(async () =>
+            {
+                for (int i = 0; i <= 100; i += 10)
+                {
+                    await Task.Delay(500);
+                    generationProgress = i;
+                    generationMessage = i switch
+                    {
+                        < 20 => "در حال تولید داده‌ها...",
+                        < 40 => "ایجاد روابط منطقی...",
+                        < 60 => "افزودن Noise واقعی...",
+                        < 80 => "محاسبه آمار...",
+                        < 100 => "ذخیره‌سازی در دیتابیس...",
+                        _ => "اتمام!"
+                    };
+                    InvokeAsync(StateHasChanged);
+                }
+            });
+            
+            await DatasetService.GenerateDatasetAsync((int)recordCount);
+            await progressTask;
+            
+            Snackbar.Add($"Dataset با {recordCount:N0} رکورد تولید شد!", Severity.Success);
+            await LoadStatisticsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"خطا: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            generating = false;
+            generationProgress = null;
+        }
+    }
+
+    private async Task UploadFileAsync()
+    {
+        if (uploadedFile == null) return;
+        
+        try
+        {
+            using var stream = uploadedFile.OpenReadStream();
+            await DatasetService.UploadCsvAsync(stream, uploadedFile.Name);
+            Snackbar.Add("فایل CSV با موفقیت آپلود شد!", Severity.Success);
+            await LoadStatisticsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"خطا در آپلود: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void OnFileSelected(IBrowserFile[] files)
+    {
+        if (files.Length > 0)
+        {
+            uploadedFile = files[0];
+        }
+    }
+}

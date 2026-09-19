@@ -1,0 +1,218 @@
+@page "/prediction"
+@using StudentScorePrediction.Client.Services
+@inject IPredictionService PredictionService
+@inject IModelService ModelService
+
+<MudText Typo="Typo.h4" Class="mb-4">پیش‌بینی نمره دانش‌آموز</MudText>
+
+<MudGrid Spacing="4">
+    <MudItem xs="12" md="6">
+        <MudPaper Class="pa-4">
+            <MudForm @ref="form" Validation="@(new DataAnnotationsValidator())">
+                <MudText Typo="Typo.h6" Class="mb-4">اطلاعات دانش‌آموز</MudText>
+                
+                <MudGrid Spacing="3">
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField @bind-Value="predictionInput.Age" Label="سن" Min="10" Max="25" Required="true" 
+                                         HelperText="بین ۱۰ تا ۲۵ سال" Variant="Variant.Outlined" />
+                    </MudItem>
+                    
+                    <MudItem xs="12" sm="6">
+                        <MudSelect T="int" @bind-Value="predictionInput.Gender" Label="جنسیت" Required="true" Variant="Variant.Outlined">
+                            <MudSelectItem Value="0">مرد</MudSelectItem>
+                            <MudSelectItem Value="1">زن</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+                    
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField @bind-Value="predictionInput.StudyHours" Label="ساعات مطالعه روزانه" Min="0" Max="24" 
+                                         Step="0.5" Required="true" Variant="Variant.Outlined" />
+                    </MudItem>
+                    
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField @bind-Value="predictionInput.AttendanceRate" Label="نرخ حضور (%)" Min="0" Max="100" 
+                                         Required="true" Variant="Variant.Outlined" />
+                    </MudItem>
+                    
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField @bind-Value="predictionInput.HomeworkCompletionRate" Label="نرخ تکالیف (%)" Min="0" Max="100" 
+                                         Required="true" Variant="Variant.Outlined" />
+                    </MudItem>
+                    
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField @bind-Value="predictionInput.PreviousAverage" Label="میانگین نمرات قبلی" Min="0" Max="20" 
+                                         Step="0.1" Required="true" Variant="Variant.Outlined" />
+                    </MudItem>
+                    
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField @bind-Value="predictionInput.PreviousExamScore" Label="نمره امتحان قبلی" Min="0" Max="20" 
+                                         Step="0.1" Required="true" Variant="Variant.Outlined" />
+                    </MudItem>
+                    
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField @bind-Value="predictionInput.MidtermScore" Label="نمره میان‌ترم" Min="0" Max="20" 
+                                         Step="0.1" Required="true" Variant="Variant.Outlined" />
+                    </MudItem>
+                    
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField @bind-Value="predictionInput.AbsenceDays" Label="روزهای غیبت" Min="0" Max="30" 
+                                         Required="true" Variant="Variant.Outlined" />
+                    </MudItem>
+                    
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField @bind-Value="predictionInput.SleepHours" Label="ساعات خواب شبانه" Min="0" Max="24" 
+                                         Step="0.5" Required="true" Variant="Variant.Outlined" />
+                    </MudItem>
+                    
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField @bind-Value="predictionInput.ClassParticipation" Label="مشارکت کلاسی (۰-۱۰)" Min="0" Max="10" 
+                                         Step="0.5" Required="true" Variant="Variant.Outlined" />
+                    </MudItem>
+                    
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField @bind-Value="predictionInput.MobileUsageHours" Label="ساعات استفاده از موبایل" Min="0" Max="24" 
+                                         Step="0.5" Required="true" Variant="Variant.Outlined" />
+                    </MudItem>
+                    
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField @bind-Value="predictionInput.PracticeTestCount" Label="تعداد آزمون‌های تمرینی" Min="0" Max="50" 
+                                         Required="true" Variant="Variant.Outlined" />
+                    </MudItem>
+                </MudGrid>
+                
+                <div class="mt-6 d-flex justify-end">
+                    <MudButton Color="Color.Primary" Size="Size.Large" OnClick="PredictAsync" 
+                               Disabled="@(!form.IsValid || loading)" StartIcon="@Icons.Material.Filled.AutoAwesome">
+                        @if (loading)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="ml-2" />
+                        }
+                        پیش‌بینی نمره
+                    </MudButton>
+                </div>
+            </MudForm>
+        </MudPaper>
+    </MudItem>
+    
+    <MudItem xs="12" md="6">
+        @if (predictionResult != null)
+        {
+            <MudPaper Class="pa-4 text-center" Style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <MudText Typo="Typo.h5" Class="mb-2">نمره پیش‌بینی شده</MudText>
+                <MudText Typo="Typo.display1" Class="mb-2" Style="font-weight: bold;">@predictionResult.PredictedScore.ToString("F2") / 20</MudText>
+                
+                <MudDivider Class="my-4" Style="border-color: rgba(255,255,255,0.3)" />
+                
+                <MudGrid Spacing="2">
+                    <MudItem xs="6">
+                        <MudText Typo="Typo.subtitle2">نسخه مدل</MudText>
+                        <MudText Typo="Typo.body1">@predictionResult.ModelVersion</MudText>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudText Typo="Typo.subtitle2">الگوریتم</MudText>
+                        <MudText Typo="Typo.body1">@predictionResult.Algorithm</MudText>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudText Typo="Typo.subtitle2">زمان پیش‌بینی</MudText>
+                        <MudText Typo="Typo.body1">@predictionResult.PredictionTime.ToString("yyyy/MM/dd HH:mm")</MudText>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudText Typo="Typo.subtitle2">مدت اجرا</MudText>
+                        <MudText Typo="Typo.body1">@predictionResult.DurationMs میلی‌ثانیه</MudText>
+                    </MudItem>
+                </MudGrid>
+                
+                @if (predictionResult.Explainability != null && predictionResult.Explainability.Any())
+                {
+                    <MudDivider Class="my-4" Style="border-color: rgba(255,255,255,0.3)" />
+                    <MudText Typo="Typo.h6" Class="mb-3">عوامل مؤثر</MudText>
+                    <MudGrid Spacing="2">
+                        @foreach (var feature in predictionResult.Explainability.Take(4))
+                        {
+                            <MudItem xs="6">
+                                <MudText Typo="Typo.caption">@feature.FeatureName</MudText>
+                                <MudProgressLinear Value="@((feature.Importance + 1) * 50)" Color="Color.Secondary" Class="mt-1" />
+                            </MudItem>
+                        }
+                    </MudGrid>
+                }
+            </MudPaper>
+            
+            <MudPaper Class="pa-4 mt-4">
+                <MudText Typo="Typo.h6" Class="mb-3">وضعیت نمره</MudText>
+                @{
+                    var score = predictionResult.PredictedScore;
+                    var status = score >= 17.5 ? "عالی" : score >= 15 ? "خوب" : score >= 12 ? "متوسط" : score >= 10 ? "نیاز به تلاش" : "ضعیف";
+                    var color = score >= 17.5 ? Color.Success : score >= 15 ? Color.Info : score >= 12 ? Color.Warning : Color.Error;
+                }
+                <MudChip T="string" Color="@color" Style="font-size: 1.2rem; padding: 8px 16px;">@status</MudChip>
+                
+                <MudAlert Severity="@(score >= 15 ? Severity.Success : Severity.Warning)" Class="mt-4">
+                    @if (score >= 15)
+                    {
+                        <text>آفرین! دانش‌آموز عملکرد خوبی دارد.</text>
+                    }
+                    else if (score >= 10)
+                    {
+                        <text>دانش‌آموز نیاز به توجه بیشتری دارد. افزایش ساعات مطالعه و مشارکت کلاسی می‌تواند کمک کند.</text>
+                    }
+                    else
+                    {
+                        <text>نیاز به مداخله فوری! لطفاً با مشاور تحصیلی تماس بگیرید.</text>
+                    }
+                </MudAlert>
+            </MudPaper>
+        }
+        else
+        {
+            <MudPaper Class="pa-4 text-center" Style="min-height: 400px; display: flex; align-items: center; justify-content: center;">
+                <div>
+                    <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Style="font-size: 80px; opacity: 0.3;" />
+                    <MudText Typo="Typo.h6" Class="mt-4" Style="opacity: 0.6;">فرم را پر کنید تا پیش‌بینی انجام شود</MudText>
+                </div>
+            </MudPaper>
+        }
+    </MudItem>
+</MudGrid>
+
+@code {
+    private MudForm form;
+    private bool loading;
+    private PredictionDto? predictionResult;
+    
+    private PredictionRequestDto predictionInput = new()
+    {
+        Age = 15,
+        Gender = 0,
+        StudyHours = 3,
+        AttendanceRate = 90,
+        HomeworkCompletionRate = 85,
+        PreviousAverage = 16,
+        PreviousExamScore = 15.5m,
+        MidtermScore = 16,
+        AbsenceDays = 2,
+        SleepHours = 8,
+        ClassParticipation = 7,
+        MobileUsageHours = 2,
+        PracticeTestCount = 5
+    };
+
+    private async Task PredictAsync()
+    {
+        if (!form.IsValid) return;
+        
+        loading = true;
+        try
+        {
+            predictionResult = await PredictionService.PredictAsync(predictionInput);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"خطا در پیش‌بینی: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+}

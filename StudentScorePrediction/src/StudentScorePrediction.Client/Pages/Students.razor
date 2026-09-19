@@ -1,0 +1,124 @@
+@page "/students"
+@using StudentScorePrediction.Client.Services
+@inject IStudentService StudentService
+@inject NavigationManager Navigation
+
+<MudText Typo="Typo.h4" Class="mb-4">مدیریت دانش‌آموزان</MudText>
+
+<MudPaper Class="pa-4 mb-4">
+    <MudGrid Spacing="3">
+        <MudItem xs="12" md="6">
+            <MudTextField @bind-Value="searchTerm" Label="جستجو" Variant="Variant.Outlined" />
+        </MudItem>
+        <MudItem xs="12" md="3">
+            <MudNumericField @bind-Value="pageSize" Label="تعداد در صفحه" Variant="Variant.Outlined" Min="5" Max="100" />
+        </MudItem>
+        <MudItem xs="12" md="3" Class="d-flex align-end">
+            <MudButton Color="Color.Primary" OnClick="SearchAsync" FullWidth="true">جستجو</MudButton>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+<MudPaper Class="pa-4">
+    <div class="d-flex justify-space-between align-center mb-4">
+        <MudText Typo="Typo.h6">لیست دانش‌آموزان (@totalItems رکورد)</MudText>
+        <MudButton Color="Color.Success" OnClick="OpenAddDialog" StartIcon="@Icons.Material.Filled.Add">دانش‌آموز جدید</MudButton>
+    </div>
+
+    @if (loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+    }
+    else if (students.Any())
+    {
+        <MudTable T="StudentDto" Items="students" Hover="true" Breakpoint="Breakpoint.Sm">
+            <HeaderContent>
+                <MudTh>نام و نام خانوادگی</MudTh>
+                <MudTh>سن</MudTh>
+                <MudTh>جنسیت</MudTh>
+                <MudTh>میانگین قبلی</MudTh>
+                <MudTh>نمره میان‌ترم</MudTh>
+                <MudTh>عملکرد</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="نام">@context.FirstName @context.LastName</MudTd>
+                <MudTd DataLabel="سن">@context.Age</MudTd>
+                <MudTd DataLabel="جنسیت">@(context.Gender == 0 ? "مرد" : "زن")</MudTd>
+                <MudTd DataLabel="میانگین">@context.PreviousAverage.ToString("F2")</MudTd>
+                <MudTd DataLabel="میان‌ترم">@context.MidtermScore.ToString("F2")</MudTd>
+                <MudTd DataLabel="عملکرد">
+                    <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" OnClick="() => ViewDetails(context.Id)" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="() => OpenEditDialog(context)" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeleteStudent(context.Id)" />
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager TotalItems="totalItems" RowsPerPage="pageSize" @bind-Page="currentPage" />
+            </PagerContent>
+        </MudTable>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Info">هیچ دانش‌آموزی یافت نشد.</MudAlert>
+    }
+</MudPaper>
+
+@code {
+    private List<StudentDto> students = new();
+    private int totalItems;
+    private int currentPage = 0;
+    private int pageSize = 10;
+    private string searchTerm = "";
+    private bool loading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadStudentsAsync();
+    }
+
+    private async Task LoadStudentsAsync()
+    {
+        loading = true;
+        try
+        {
+            var result = await StudentService.GetStudentsAsync(currentPage, pageSize, searchTerm);
+            students = result.Items.ToList();
+            totalItems = result.TotalCount;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task SearchAsync()
+    {
+        currentPage = 0;
+        await LoadStudentsAsync();
+    }
+
+    private void OpenAddDialog()
+    {
+        Navigation.NavigateTo("/students/new");
+    }
+
+    private void OpenEditDialog(StudentDto student)
+    {
+        Navigation.NavigateTo($"/students/edit/{student.Id}");
+    }
+
+    private async Task DeleteStudent(int id)
+    {
+        var confirmed = await DialogService.ShowMessageBox("تأیید حذف", "آیا از حذف این دانش‌آموز اطمینان دارید؟", yesText: "بله", noText: "خیر");
+        if (confirmed == true)
+        {
+            await StudentService.DeleteStudentAsync(id);
+            await LoadStudentsAsync();
+        }
+    }
+
+    private void ViewDetails(int id)
+    {
+        Navigation.NavigateTo($"/students/{id}");
+    }
+}

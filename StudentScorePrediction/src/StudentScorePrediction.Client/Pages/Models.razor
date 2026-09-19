@@ -1,0 +1,151 @@
+@page "/models"
+@using StudentScorePrediction.Client.Services
+@inject IModelService ModelService
+
+<MudText Typo="Typo.h4" Class="mb-4">مدیریت مدل‌ها</MudText>
+
+<MudPaper Class="pa-4 mb-4">
+    <MudGrid Spacing="3">
+        <MudItem xs="12" md="4">
+            <MudSelect T="string" @bind-Value="algorithmFilter" Label="فیلتر الگوریتم" Variant="Variant.Outlined" Clearable="true">
+                <MudSelectItem Value="">همه الگوریتم‌ها</MudSelectItem>
+                <MudSelectItem Value="FastTree">FastTree</MudSelectItem>
+                <MudSelectItem Value="FastForest">FastForest</MudSelectItem>
+                <MudSelectItem Value="SDCA">SDCA</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <MudSelect T="string" @bind-Value="statusFilter" Label="وضعیت" Variant="Variant.Outlined" Clearable="true">
+                <MudSelectItem Value="">همه</MudSelectItem>
+                <MudSelectItem Value="active">فعال</MudSelectItem>
+                <MudSelectItem Value="inactive">غیرفعال</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" md="4" Class="d-flex align-end">
+            <MudButton Color="Color.Primary" OnClick="LoadModelsAsync" FullWidth="true">اعمال فیلتر</MudButton>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+<MudPaper Class="pa-4">
+    @if (loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+    }
+    else if (models.Any())
+    {
+        <MudTable T="ModelVersionDto" Items="models" Hover="true" Breakpoint="Breakpoint.Sm">
+            <HeaderContent>
+                <MudTh>نسخه</MudTh>
+                <MudTh>الگوریتم</MudTh>
+                <MudTh>تاریخ آموزش</MudTh>
+                <MudTh>MAE</MudTh>
+                <MudTh>RMSE</MudTh>
+                <MudTh>R²</MudTh>
+                <MudTh>وضعیت</MudTh>
+                <MudTh>عملکرد</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="نسخه">@context.Version</MudTd>
+                <MudTd DataLabel="الگوریتم">
+                    <MudChip T="string" Size="Size.Small" Color="@(GetAlgorithmColor(context.Algorithm))">@context.Algorithm</MudChip>
+                </MudTd>
+                <MudTd DataLabel="تاریخ">@context.TrainingDate.ToString("yyyy/MM/dd HH:mm")</MudTd>
+                <MudTd DataLabel="MAE">@context.Metrics.MAE.ToString("F4")</MudTd>
+                <MudTd DataLabel="RMSE">@context.Metrics.RMSE.ToString("F4")</MudTd>
+                <MudTd DataLabel="R²">
+                    @{
+                        var r2Color = context.Metrics.RSquared >= 0.8 ? Color.Success : context.Metrics.RSquared >= 0.6 ? Color.Info : Color.Warning;
+                    }
+                    <MudChip T="string" Size="Size.Small" Color="@r2Color">@context.Metrics.RSquared.ToString("F3")</MudChip>
+                </MudTd>
+                <MudTd DataLabel="وضعیت">
+                    @if (context.IsActive)
+                    {
+                        <MudChip T="string" Color="Color.Success" Size="Size.Small">فعال</MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Color="Color.Default" Size="Size.Small">غیرفعال</MudChip>
+                    }
+                </MudTd>
+                <MudTd DataLabel="عملکرد">
+                    @if (!context.IsActive)
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" 
+                                       OnClick="() => ActivateModel(context.Id)" Title="فعال‌سازی" />
+                    }
+                    <MudIconButton Icon="@Icons.Material.Filled.Assessment" Color="Color.Info" 
+                                   OnClick="() => ViewDetails(context.Id)" Title="جزئیات" />
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Info">هیچ مدلی یافت نشد.</MudAlert>
+    }
+</MudPaper>
+
+@code {
+    private List<ModelVersionDto> models = new();
+    private bool loading;
+    private string algorithmFilter = "";
+    private string statusFilter = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadModelsAsync();
+    }
+
+    private async Task LoadModelsAsync()
+    {
+        loading = true;
+        try
+        {
+            models = await ModelService.GetModelsAsync(algorithmFilter, statusFilter == "active");
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private Color GetAlgorithmColor(string algorithm)
+    {
+        return algorithm switch
+        {
+            "FastTree" => Color.Primary,
+            "FastForest" => Color.Secondary,
+            "SDCA" => Color.Tertiary,
+            _ => Color.Default
+        };
+    }
+
+    private async Task ActivateModel(int modelId)
+    {
+        var confirmed = await DialogService.ShowMessageBox("تأیید فعال‌سازی", 
+            "آیا مطمئن هستید که می‌خواهید این مدل را فعال کنید؟ مدل فعلی غیرفعال خواهد شد.", 
+            yesText: "بله", noText: "خیر");
+        
+        if (confirmed == true)
+        {
+            try
+            {
+                await ModelService.ActivateModelAsync(modelId);
+                Snackbar.Add("مدل با موفقیت فعال شد!", Severity.Success);
+                await LoadModelsAsync();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"خطا: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private void ViewDetails(int modelId)
+    {
+        // Navigate to evaluation page or show dialog
+        Navigation.NavigateTo($"/evaluation?model={modelId}");
+    }
+}
