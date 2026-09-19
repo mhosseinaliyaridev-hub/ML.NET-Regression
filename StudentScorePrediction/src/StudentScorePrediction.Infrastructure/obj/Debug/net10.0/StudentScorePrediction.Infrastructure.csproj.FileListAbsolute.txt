@@ -1,0 +1,17 @@
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Infrastructure/bin/Debug/net10.0/StudentScorePrediction.Infrastructure.deps.json
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Infrastructure/bin/Debug/net10.0/StudentScorePrediction.Infrastructure.dll
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Infrastructure/bin/Debug/net10.0/StudentScorePrediction.Infrastructure.pdb
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Infrastructure/bin/Debug/net10.0/StudentScorePrediction.Application.dll
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Infrastructure/bin/Debug/net10.0/StudentScorePrediction.Domain.dll
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Infrastructure/bin/Debug/net10.0/StudentScorePrediction.Domain.pdb
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Infrastructure/bin/Debug/net10.0/StudentScorePrediction.Application.pdb
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Infrastructure/obj/Debug/net10.0/StudentScorePrediction.Infrastructure.csproj.AssemblyReference.cache
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Infrastructure/obj/Debug/net10.0/StudentScorePrediction.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Infrastructure/obj/Debug/net10.0/StudentScorePrediction.Infrastructure.AssemblyInfoInputs.cache
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Infrastructure/obj/Debug/net10.0/StudentScorePrediction.Infrastructure.AssemblyInfo.cs
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Infrastructure/obj/Debug/net10.0/StudentScorePrediction.Infrastructure.csproj.CoreCompileInputs.cache
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Infrastructure/obj/Debug/net10.0/StudentS.755FD141.Up2Date
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Infrastructure/obj/Debug/net10.0/StudentScorePrediction.Infrastructure.dll
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Infrastructure/obj/Debug/net10.0/refint/StudentScorePrediction.Infrastructure.dll
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Infrastructure/obj/Debug/net10.0/StudentScorePrediction.Infrastructure.pdb
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Infrastructure/obj/Debug/net10.0/ref/StudentScorePrediction.Infrastructure.dll

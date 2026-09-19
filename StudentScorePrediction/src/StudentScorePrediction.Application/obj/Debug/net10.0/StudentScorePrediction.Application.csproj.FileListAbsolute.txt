@@ -1,0 +1,15 @@
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Application/bin/Debug/net10.0/StudentScorePrediction.Application.deps.json
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Application/bin/Debug/net10.0/StudentScorePrediction.Application.dll
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Application/bin/Debug/net10.0/StudentScorePrediction.Application.pdb
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Application/bin/Debug/net10.0/StudentScorePrediction.Domain.dll
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Application/bin/Debug/net10.0/StudentScorePrediction.Domain.pdb
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Application/obj/Debug/net10.0/StudentScorePrediction.Application.csproj.AssemblyReference.cache
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Application/obj/Debug/net10.0/StudentScorePrediction.Application.GeneratedMSBuildEditorConfig.editorconfig
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Application/obj/Debug/net10.0/StudentScorePrediction.Application.AssemblyInfoInputs.cache
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Application/obj/Debug/net10.0/StudentScorePrediction.Application.AssemblyInfo.cs
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Application/obj/Debug/net10.0/StudentScorePrediction.Application.csproj.CoreCompileInputs.cache
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Application/obj/Debug/net10.0/StudentS.EA20F132.Up2Date
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Application/obj/Debug/net10.0/StudentScorePrediction.Application.dll
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Application/obj/Debug/net10.0/refint/StudentScorePrediction.Application.dll
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Application/obj/Debug/net10.0/StudentScorePrediction.Application.pdb
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Application/obj/Debug/net10.0/ref/StudentScorePrediction.Application.dll

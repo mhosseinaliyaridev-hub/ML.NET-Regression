@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "dgSpecHash": "5LDFxqK6kDg=",
+  "success": true,
+  "projectFilePath": "/workspace/StudentScorePrediction/src/StudentScorePrediction.Api/StudentScorePrediction.Api.csproj",
+  "expectedPackageFiles": [
+    "/root/.nuget/packages/microsoft.aspnetcore.openapi/10.0.12/microsoft.aspnetcore.openapi.10.0.12.nupkg.sha512",
+    "/root/.nuget/packages/microsoft.bcl.asyncinterfaces/9.0.4/microsoft.bcl.asyncinterfaces.9.0.4.nupkg.sha512",
+    "/root/.nuget/packages/microsoft.ml/5.0.0/microsoft.ml.5.0.0.nupkg.sha512",
+    "/root/.nuget/packages/microsoft.ml.cpumath/5.0.0/microsoft.ml.cpumath.5.0.0.nupkg.sha512",
+    "/root/.nuget/packages/microsoft.ml.dataview/5.0.0/microsoft.ml.dataview.5.0.0.nupkg.sha512",
+    "/root/.nuget/packages/microsoft.ml.fasttree/5.0.0/microsoft.ml.fasttree.5.0.0.nupkg.sha512",
+    "/root/.nuget/packages/microsoft.openapi/2.12.0/microsoft.openapi.2.12.0.nupkg.sha512",
+    "/root/.nuget/packages/newtonsoft.json/13.0.3/newtonsoft.json.13.0.3.nupkg.sha512",
+    "/root/.nuget/packages/system.codedom/9.0.4/system.codedom.9.0.4.nupkg.sha512",
+    "/root/.nuget/packages/system.numerics.tensors/9.0.4/system.numerics.tensors.9.0.4.nupkg.sha512"
+  ],
+  "logs": []
+}
