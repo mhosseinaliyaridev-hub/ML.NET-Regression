@@ -2,18 +2,27 @@ using StudentScorePrediction.Application.DTOs;
 
 namespace StudentScorePrediction.Application.Interfaces;
 
+public interface IStudentService
+{
+    Task<StudentDto?> GetStudentByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task<PagedResult<StudentDto>> GetPagedStudentsAsync(int pageNumber, int pageSize, string? searchTerm, CancellationToken cancellationToken = default);
+    Task<StudentDto> CreateStudentAsync(CreateStudentDto dto, CancellationToken cancellationToken = default);
+    Task<StudentDto?> UpdateStudentAsync(int id, UpdateStudentDto dto, CancellationToken cancellationToken = default);
+    Task<bool> DeleteStudentAsync(int id, CancellationToken cancellationToken = default);
+}
+
 public interface IPredictionService
 {
-    Task<PredictionResultDto> PredictAsync(CreatePredictionDto input, CancellationToken cancellationToken = default);
-    Task<IEnumerable<PredictionDto>> GetPredictionsAsync(int page, int pageSize, int? studentId = null, CancellationToken cancellationToken = default);
-    Task<int> GetTotalPredictionCountAsync(CancellationToken cancellationToken = default);
+    Task<PredictionDto?> GetPredictionByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task<PagedResult<PredictionDto>> GetPagedPredictionsAsync(int pageNumber, int pageSize, int? studentId, CancellationToken cancellationToken = default);
+    Task<PredictionResultDto> MakePredictionAsync(PredictionRequestDto request, CancellationToken cancellationToken = default);
 }
 
 public interface ITrainingService
 {
-    Task<int> StartTrainingAsync(string algorithm, CancellationToken cancellationToken = default);
-    Task<TrainingRunDto?> GetTrainingStatusAsync(int trainingId, CancellationToken cancellationToken = default);
-    Task<IEnumerable<TrainingRunDto>> GetTrainingRunsAsync(CancellationToken cancellationToken = default);
+    Task<TrainingRunDto> StartTrainingAsync(string algorithm, CancellationToken cancellationToken = default);
+    Task<TrainingStatusDto> GetTrainingStatusAsync(CancellationToken cancellationToken = default);
+    Task<IEnumerable<TrainingRunDto>> GetAllTrainingRunsAsync(CancellationToken cancellationToken = default);
 }
 
 public interface IModelService
@@ -21,22 +30,11 @@ public interface IModelService
     Task<IEnumerable<ModelVersionDto>> GetAllModelsAsync(CancellationToken cancellationToken = default);
     Task<ModelVersionDto?> GetModelByIdAsync(int id, CancellationToken cancellationToken = default);
     Task ActivateModelAsync(int id, CancellationToken cancellationToken = default);
-    Task<ModelVersionDto?> GetActiveModelAsync(CancellationToken cancellationToken = default);
 }
 
 public interface IDatasetService
 {
-    Task<DatasetStatisticsDto> GetStatisticsAsync(CancellationToken cancellationToken = default);
-    Task<string> GenerateDatasetAsync(int recordCount, CancellationToken cancellationToken = default);
-    Task<string> UploadDatasetAsync(Stream fileStream, string fileName, CancellationToken cancellationToken = default);
-}
-
-public interface IStudentService
-{
-    Task<StudentDto?> GetStudentByIdAsync(int id, CancellationToken cancellationToken = default);
-    Task<(IEnumerable<StudentDto> Students, int TotalCount)> GetStudentsAsync(int page, int pageSize, string? search = null, CancellationToken cancellationToken = default);
-    Task<StudentDto> CreateStudentAsync(CreateStudentDto dto, CancellationToken cancellationToken = default);
-    Task UpdateStudentAsync(int id, UpdateStudentDto dto, CancellationToken cancellationToken = default);
-    Task DeleteStudentAsync(int id, CancellationToken cancellationToken = default);
-    Task<int> GetTotalStudentCountAsync(CancellationToken cancellationToken = default);
+    Task<DatasetInfoDto> GenerateDatasetAsync(int recordCount, CancellationToken cancellationToken = default);
+    Task<DatasetInfoDto> UploadDatasetAsync(Stream stream, string fileName, CancellationToken cancellationToken = default);
+    Task<DatasetStatisticsDto> GetDatasetStatisticsAsync(CancellationToken cancellationToken = default);
 }

@@ -1,3 +1,5 @@
+using StudentScorePrediction.Domain.Enums;
+
 namespace StudentScorePrediction.Application.DTOs;
 
 public class StudentDto
@@ -6,19 +8,19 @@ public class StudentDto
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public int Age { get; set; }
-    public string Gender { get; set; } = string.Empty;
-    public double StudyHours { get; set; }
-    public double AttendanceRate { get; set; }
-    public double HomeworkCompletionRate { get; set; }
-    public double PreviousAverage { get; set; }
-    public double PreviousExamScore { get; set; }
-    public double MidtermScore { get; set; }
+    public Gender Gender { get; set; }
+    public float StudyHours { get; set; }
+    public float AttendanceRate { get; set; }
+    public float HomeworkCompletionRate { get; set; }
+    public float PreviousAverage { get; set; }
+    public float PreviousExamScore { get; set; }
+    public float MidtermScore { get; set; }
     public int AbsenceDays { get; set; }
-    public double SleepHours { get; set; }
-    public double ClassParticipation { get; set; }
-    public double MobileUsageHours { get; set; }
+    public float SleepHours { get; set; }
+    public float ClassParticipation { get; set; }
+    public float MobileUsageHours { get; set; }
     public int PracticeTestCount { get; set; }
-    public double? FinalScore { get; set; }
+    public float? FinalScore { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 }
@@ -28,35 +30,35 @@ public class CreateStudentDto
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public int Age { get; set; }
-    public string Gender { get; set; } = string.Empty;
-    public double StudyHours { get; set; }
-    public double AttendanceRate { get; set; }
-    public double HomeworkCompletionRate { get; set; }
-    public double PreviousAverage { get; set; }
-    public double PreviousExamScore { get; set; }
-    public double MidtermScore { get; set; }
+    public Gender Gender { get; set; }
+    public float StudyHours { get; set; }
+    public float AttendanceRate { get; set; }
+    public float HomeworkCompletionRate { get; set; }
+    public float PreviousAverage { get; set; }
+    public float PreviousExamScore { get; set; }
+    public float MidtermScore { get; set; }
     public int AbsenceDays { get; set; }
-    public double SleepHours { get; set; }
-    public double ClassParticipation { get; set; }
-    public double MobileUsageHours { get; set; }
+    public float SleepHours { get; set; }
+    public float ClassParticipation { get; set; }
+    public float MobileUsageHours { get; set; }
     public int PracticeTestCount { get; set; }
 }
 
 public class UpdateStudentDto
 {
-    public string FirstName { get; set; } = string.Empty;
-    public string LastName { get; set; } = string.Empty;
-    public int Age { get; set; }
-    public string Gender { get; set; } = string.Empty;
-    public double StudyHours { get; set; }
-    public double AttendanceRate { get; set; }
-    public double HomeworkCompletionRate { get; set; }
-    public double PreviousAverage { get; set; }
-    public double PreviousExamScore { get; set; }
-    public double MidtermScore { get; set; }
-    public int AbsenceDays { get; set; }
-    public double SleepHours { get; set; }
-    public double ClassParticipation { get; set; }
-    public double MobileUsageHours { get; set; }
-    public int PracticeTestCount { get; set; }
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public int? Age { get; set; }
+    public Gender? Gender { get; set; }
+    public float? StudyHours { get; set; }
+    public float? AttendanceRate { get; set; }
+    public float? HomeworkCompletionRate { get; set; }
+    public float? PreviousAverage { get; set; }
+    public float? PreviousExamScore { get; set; }
+    public float? MidtermScore { get; set; }
+    public int? AbsenceDays { get; set; }
+    public float? SleepHours { get; set; }
+    public float? ClassParticipation { get; set; }
+    public float? MobileUsageHours { get; set; }
+    public int? PracticeTestCount { get; set; }
 }

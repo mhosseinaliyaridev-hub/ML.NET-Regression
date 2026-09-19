@@ -1,0 +1,56 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v10.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v10.0": {
+      "StudentScorePrediction.Infrastructure/1.0.0": {
+        "dependencies": {
+          "StudentScorePrediction.Application": "1.0.0",
+          "StudentScorePrediction.Domain": "1.0.0"
+        },
+        "runtime": {
+          "StudentScorePrediction.Infrastructure.dll": {}
+        }
+      },
+      "StudentScorePrediction.Application/1.0.0": {
+        "dependencies": {
+          "StudentScorePrediction.Domain": "1.0.0"
+        },
+        "runtime": {
+          "StudentScorePrediction.Application.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "StudentScorePrediction.Domain/1.0.0": {
+        "runtime": {
+          "StudentScorePrediction.Domain.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "StudentScorePrediction.Infrastructure/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "StudentScorePrediction.Application/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "StudentScorePrediction.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

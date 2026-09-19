@@ -1,57 +1,54 @@
+using StudentScorePrediction.Domain.Enums;
+
 namespace StudentScorePrediction.Application.DTOs;
 
 public class ModelVersionDto
 {
     public int Id { get; set; }
     public string Version { get; set; } = string.Empty;
-    public string Algorithm { get; set; } = string.Empty;
-    public double MAE { get; set; }
-    public double MSE { get; set; }
-    public double RMSE { get; set; }
-    public double RSquared { get; set; }
+    public AlgorithmType Algorithm { get; set; }
+    public float MAE { get; set; }
+    public float MSE { get; set; }
+    public float RMSE { get; set; }
+    public float RSquared { get; set; }
     public int DatasetSize { get; set; }
-    public long TrainingDurationMs { get; set; }
-    public DateTime CreatedAt { get; set; }
+    public TimeSpan TrainingDuration { get; set; }
+    public DateTime TrainingDate { get; set; }
     public bool IsActive { get; set; }
 }
 
 public class TrainingRunDto
 {
     public int Id { get; set; }
-    public string Algorithm { get; set; } = string.Empty;
+    public int ModelVersionId { get; set; }
+    public AlgorithmType Algorithm { get; set; }
+    public string DatasetPath { get; set; } = string.Empty;
     public int DatasetSize { get; set; }
-    public string Status { get; set; } = string.Empty;
-    public double? MAE { get; set; }
-    public double? MSE { get; set; }
-    public double? RMSE { get; set; }
-    public double? RSquared { get; set; }
-    public long? DurationMs { get; set; }
-    public DateTime StartedAt { get; set; }
-    public DateTime? CompletedAt { get; set; }
+    public TrainingStatus Status { get; set; }
+    public float MAE { get; set; }
+    public float MSE { get; set; }
+    public float RMSE { get; set; }
+    public float RSquared { get; set; }
+    public TimeSpan Duration { get; set; }
+    public DateTime StartTime { get; set; }
+    public DateTime? EndTime { get; set; }
     public string? ErrorMessage { get; set; }
 }
 
-public class StartTrainingDto
+public class TrainingRequestDto
 {
-    public string Algorithm { get; set; } = "FastTreeRegression";
+    public string DatasetPath { get; set; } = string.Empty;
+    public AlgorithmType Algorithm { get; set; }
+    public string ModelVersion { get; set; } = string.Empty;
 }
 
-public class DatasetStatisticsDto
+public class ModelEvaluationDto
 {
-    public int RecordCount { get; set; }
-    public int MissingValues { get; set; }
-    public int Outliers { get; set; }
-    public Dictionary<string, FeatureStats>? FeatureStats { get; set; }
-}
-
-public class FeatureStats
-{
-    public double Min { get; set; }
-    public double Max { get; set; }
-    public double Average { get; set; }
-}
-
-public class GenerateDatasetDto
-{
-    public int RecordCount { get; set; } = 100000;
+    public AlgorithmType Algorithm { get; set; }
+    public float MAE { get; set; }
+    public float MSE { get; set; }
+    public float RMSE { get; set; }
+    public float RSquared { get; set; }
+    public TimeSpan TrainingDuration { get; set; }
+    public string? Error { get; set; }
 }

@@ -1,0 +1,11 @@
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Domain/bin/Debug/net10.0/StudentScorePrediction.Domain.deps.json
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Domain/bin/Debug/net10.0/StudentScorePrediction.Domain.dll
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Domain/bin/Debug/net10.0/StudentScorePrediction.Domain.pdb
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Domain/obj/Debug/net10.0/StudentScorePrediction.Domain.GeneratedMSBuildEditorConfig.editorconfig
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Domain/obj/Debug/net10.0/StudentScorePrediction.Domain.AssemblyInfoInputs.cache
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Domain/obj/Debug/net10.0/StudentScorePrediction.Domain.AssemblyInfo.cs
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Domain/obj/Debug/net10.0/StudentScorePrediction.Domain.csproj.CoreCompileInputs.cache
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Domain/obj/Debug/net10.0/StudentScorePrediction.Domain.dll
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Domain/obj/Debug/net10.0/refint/StudentScorePrediction.Domain.dll
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Domain/obj/Debug/net10.0/StudentScorePrediction.Domain.pdb
+/workspace/StudentScorePrediction/src/StudentScorePrediction.Domain/obj/Debug/net10.0/ref/StudentScorePrediction.Domain.dll

@@ -1,88 +1,44 @@
 ```
-# Build results
-**/bin/
-**/obj/
-**/out/
-
-# User-specific files
-.vs/
-.vscode/
-*.userprefs
-*.userosscache
-*.suo
-*.user
-*.aps
-*.ilk
-*.pidb
-*.svclog
+# Build artifacts
+bin/
+obj/
+*.dll
+*.exe
 *.pdb
-*.mdb
-*.rpt
-*.cache
-*.cached
-*.log
-*.tmp
-*.temp
+*.nupkg
+*.snupkg
 
-# Environment specific settings
+# Dependencies
+packages/
+node_modules/
+vendor/
+
+# Logs
+*.log
+
+# Environment
 .env
 .env.local
 *.env.*
 
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
 # OS generated files
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
-desktop.ini
-*.nupkg
-[Nn]uget.*.json
-[Oo]bj/
 
-# Visual Studio Code
-.vscode/*
-
-# Dependencies
-node_modules/
-packages/
-julia-*/
-zig*/
-
-# Test results and coverage
-TestResults/
+# Test and coverage
 coverage/
-*.cover
-*.log
-*.xml
+htmlcov/
+*.coverage
+.testcoverage.*
 
-# Localized resources
-*.en.resx
-*.es.resx
-*.fr.resx
-*.de.resx
-*.ja.resx
-*.ko.resx
-*.ru.resx
-*.zh-Hans.resx
-*.zh-Hant.resx
-
-# Publish artifacts
-publish/
-deploy/
-
-# ML/AI specific
-*.model
-*.pb
-*.onnx
-*.joblib
-*.pkl
-*.pickle
-
-# Configuration specific to ML.NET
-MLModel.zip
-MLModel.consumption.zip
-MLModel.training.zip
+# Temporary files
+*.tmp
+*.temp
+[Tt]mp*/
 ```

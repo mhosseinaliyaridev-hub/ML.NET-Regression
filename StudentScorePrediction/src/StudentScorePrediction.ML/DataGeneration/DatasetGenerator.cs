@@ -1,162 +1,141 @@
-using StudentScorePrediction.ML.Models;
+using StudentScorePrediction.Domain.Enums;
 
 namespace StudentScorePrediction.ML.DataGeneration;
 
 public class DatasetGenerator
 {
-    private static readonly Random _random = new();
+    private readonly Random _random = new();
+    private static readonly string[] FirstNames = { "Ali", "Reza", "Mohammad", "Hossein", "Ahmad", "Maryam", "Zahra", "Fateme", "Narges", "Leila" };
+    private static readonly string[] LastNames = { "Hosseini", "Karimi", "Moradi", "Rashidi", "Azizi", "Mohammadi", "Rezaei", "Ahmadi", "Hasani", "Jafari" };
 
-    public static IEnumerable<StudentInput> Generate(int recordCount, int seed = 42)
+    public void GenerateCsv(string filePath, int count)
     {
-        _random = new Random(seed);
-
-        var firstNames = new[] { "Ali", "Reza", "Mohammad", "Hossein", "Ahmad", "Maryam", "Zahra", "Fatima", "Sara", "Narges" };
-        var lastNames = new[] { "Hosseini", "Karimi", "Moradi", "Rashidi", "Azizi", "Mohammadi", "Rezaei", "Ahmadi", "Hasani", "Jafari" };
-
-        for (int i = 0; i < recordCount; i++)
+        using var writer = new StreamWriter(filePath);
+        
+        // Write header
+        writer.WriteLine("Age,Gender,StudyHours,AttendanceRate,HomeworkCompletionRate,PreviousAverage,PreviousExamScore,MidtermScore,AbsenceDays,SleepHours,ClassParticipation,MobileUsageHours,PracticeTestCount,FinalScore");
+        
+        for (int i = 0; i < count; i++)
         {
-            var student = GenerateRealisticStudent();
-
-            // Add some missing values (about 1% of data)
-            if (_random.NextDouble() < 0.01)
-            {
-                student.SleepHours = float.NaN;
-            }
-            if (_random.NextDouble() < 0.01)
-            {
-                student.ClassParticipation = float.NaN;
-            }
-
-            // Add some outliers (about 0.5% of data)
+            var student = GenerateStudent();
+            
+            // Add some missing values (about 1%)
+            var sleepHours = _random.NextDouble() < 0.01 ? "" : student.SleepHours.ToString("F2");
+            var classParticipation = _random.NextDouble() < 0.01 ? "" : student.ClassParticipation.ToString("F2");
+            
+            // Add some outliers (about 0.5%)
+            var studyHours = student.StudyHours;
+            var attendanceRate = student.AttendanceRate;
+            
             if (_random.NextDouble() < 0.005)
-            {
-                student.StudyHours = _random.Next(15, 20); // Unusually high
-            }
+                studyHours = _random.Next(20, 30); // Unrealistic study hours
+            
             if (_random.NextDouble() < 0.005)
-            {
-                student.AttendanceRate = _random.Next(0, 30); // Unusually low
-            }
-
-            yield return student;
+                attendanceRate = _random.Next(-10, 0); // Negative attendance (error)
+            
+            writer.WriteLine($"{student.Age},{student.Gender},{studyHours:F2},{attendanceRate:F2},{student.HomeworkCompletionRate:F2},{student.PreviousAverage:F2},{student.PreviousExamScore:F2},{student.MidtermScore:F2},{student.AbsenceDays},{sleepHours},{classParticipation},{student.MobileUsageHours:F2},{student.PracticeTestCount},{student.FinalScore:F2}");
         }
     }
 
-    private static StudentInput GenerateRealisticStudent()
+    private StudentRecord GenerateStudent()
     {
-        // Base values with realistic distributions
-        var age = _random.Next(10, 26);
-        var gender = _random.Next(0, 2); // 0 or 1
-        var studyHours = Math.Max(0, Math.Min(12, _random.NextDouble() * 8 + 1)); // 1-9 hours typically
-        var attendanceRate = Math.Max(0, Math.Min(100, _random.NextDouble() * 40 + 60)); // 60-100% typically
-        var homeworkCompletionRate = Math.Max(0, Math.Min(100, _random.NextDouble() * 50 + 50)); // 50-100%
-        var previousAverage = Math.Max(0, Math.Min(20, _random.NextDouble() * 8 + 10)); // 10-18 typically
-        var previousExamScore = Math.Max(0, Math.Min(20, _random.NextDouble() * 10 + 8)); // 8-18
-        var midtermScore = Math.Max(0, Math.Min(20, _random.NextDouble() * 12 + 6)); // 6-18
-        var absenceDays = Math.Max(0, Math.Min(30, _random.NextDouble() * 10)); // 0-10 days typically
-        var sleepHours = Math.Max(4, Math.Min(12, _random.NextDouble() * 4 + 6)); // 6-10 hours
-        var classParticipation = Math.Max(0, Math.Min(100, _random.NextDouble() * 60 + 40)); // 40-100%
-        var mobileUsageHours = Math.Max(0, Math.Min(10, _random.NextDouble() * 6)); // 0-6 hours
-        var practiceTestCount = Math.Max(0, Math.Min(50, _random.NextDouble() * 30)); // 0-30 tests
+        var gender = _random.NextDouble() < 0.5 ? "Male" : "Female";
+        
+        // Generate correlated features
+        var baseAbility = (float)_random.NextDouble(); // Hidden variable representing student ability
+        
+        var studyHours = Math.Clamp((float)_random.NextGaussian(4 + baseAbility * 6, 2), 0, 16);
+        var attendanceRate = Math.Clamp((float)_random.NextGaussian(60 + baseAbility * 35, 15), 0, 100);
+        var homeworkCompletionRate = Math.Clamp((float)_random.NextGaussian(50 + baseAbility * 45, 12), 0, 100);
+        var previousAverage = Math.Clamp((float)_random.NextGaussian(8 + baseAbility * 10, 3), 0, 20);
+        var previousExamScore = Math.Clamp((float)_random.NextGaussian(previousAverage, 2), 0, 20);
+        var midtermScore = Math.Clamp((float)_random.NextGaussian(previousAverage + (float)_random.NextDouble() * 2 - 1, 2), 0, 20);
+        var absenceDays = Math.Max(0, (int)Math.Round((100 - attendanceRate) / 10 + _random.NextGaussian(0, 2)));
+        var sleepHours = Math.Clamp((float)_random.NextGaussian(7, 1.5), 3, 12);
+        var classParticipation = Math.Clamp((float)_random.NextGaussian(40 + baseAbility * 50, 15), 0, 100);
+        var mobileUsageHours = Math.Clamp((float)_random.NextGaussian(4 - baseAbility * 2, 1.5), 0, 12);
+        var practiceTestCount = (int)Math.Max(0, Math.Round(_random.NextGaussian(3 + baseAbility * 7, 2)));
 
-        // Calculate FinalScore based on realistic relationships
-        // This creates a meaningful correlation between features and target
-        var baseScore = 10.0f;
+        // Calculate final score based on features with realistic relationships
+        float finalScore = CalculateFinalScore(
+            studyHours, attendanceRate, homeworkCompletionRate, previousAverage,
+            midtermScore, absenceDays, sleepHours, classParticipation,
+            mobileUsageHours, practiceTestCount, baseAbility);
 
-        // Positive influences
-        baseScore += (float)(studyHours * 0.6); // More study → higher score
-        baseScore += (float)(attendanceRate * 0.08); // Better attendance → higher score
-        baseScore += (float)(homeworkCompletionRate * 0.05); // More homework → higher score
-        baseScore += (float)(previousAverage * 0.25); // Previous performance matters
-        baseScore += (float)(midtermScore * 0.3); // Midterm is strong predictor
-        baseScore += (float)(classParticipation * 0.04); // Participation helps
-        baseScore += (float)(practiceTestCount * 0.03); // Practice improves score
-        baseScore += (float)(sleepHours * 0.3); // Good sleep helps
-
-        // Negative influences
-        baseScore -= (float)(absenceDays * 0.4); // More absences → lower score
-        baseScore -= (float)(mobileUsageHours * 0.5); // More mobile usage → lower score
-
-        // Add noise to make it realistic (not perfectly predictable)
-        var noise = (float)(_random.NextGaussian() * 1.5);
-        var finalScore = baseScore + noise;
-
-        // Clamp to valid range [0, 20]
-        finalScore = Math.Max(0, Math.Min(20, finalScore));
-
-        return new StudentInput
+        return new StudentRecord
         {
-            Age = age,
+            Age = _random.Next(10, 26),
             Gender = gender,
-            StudyHours = (float)Math.Round(studyHours, 2),
-            AttendanceRate = (float)Math.Round(attendanceRate, 2),
-            HomeworkCompletionRate = (float)Math.Round(homeworkCompletionRate, 2),
-            PreviousAverage = (float)Math.Round(previousAverage, 2),
-            PreviousExamScore = (float)Math.Round(previousExamScore, 2),
-            MidtermScore = (float)Math.Round(midtermScore, 2),
-            AbsenceDays = (float)Math.Round(absenceDays, 2),
-            SleepHours = (float)Math.Round(sleepHours, 2),
-            ClassParticipation = (float)Math.Round(classParticipation, 2),
-            MobileUsageHours = (float)Math.Round(mobileUsageHours, 2),
-            PracticeTestCount = (float)Math.Round(practiceTestCount, 2),
-            FinalScore = (float)Math.Round(finalScore, 2)
+            StudyHours = studyHours,
+            AttendanceRate = attendanceRate,
+            HomeworkCompletionRate = homeworkCompletionRate,
+            PreviousAverage = previousAverage,
+            PreviousExamScore = previousExamScore,
+            MidtermScore = midtermScore,
+            AbsenceDays = absenceDays,
+            SleepHours = sleepHours,
+            ClassParticipation = classParticipation,
+            MobileUsageHours = mobileUsageHours,
+            PracticeTestCount = practiceTestCount,
+            FinalScore = finalScore
         };
     }
 
-    // Box-Muller transform for Gaussian random numbers
-    private static double NextGaussian(this Random random)
+    private float CalculateFinalScore(
+        float studyHours, float attendanceRate, float homeworkCompletionRate,
+        float previousAverage, float midtermScore, int absenceDays,
+        float sleepHours, float classParticipation, float mobileUsageHours,
+        int practiceTestCount, float baseAbility)
     {
-        var u1 = 1.0 - random.NextDouble();
-        var u2 = 1.0 - random.NextDouble();
-        var randStdNormal = Math.Sqrt(-2.0 * Math.Log(u1)) * Math.Sin(2.0 * Math.PI * u2);
-        return randStdNormal;
+        // Weighted combination of features
+        float score = 0;
+
+        // Positive factors
+        score += studyHours * 0.4f; // More study → higher score
+        score += attendanceRate * 0.15f; // Better attendance → higher score
+        score += homeworkCompletionRate * 0.1f; // More homework → higher score
+        score += previousAverage * 0.3f; // Better previous performance → higher score
+        score += midtermScore * 0.25f; // Better midterm → higher score
+        score += classParticipation * 0.08f; // More participation → higher score
+        score += practiceTestCount * 0.15f; // More practice → higher score
+
+        // Sleep effect (optimal around 7-8 hours)
+        if (sleepHours >= 6 && sleepHours <= 9)
+            score += sleepHours * 0.1f;
+        else if (sleepHours < 6)
+            score -= (6 - sleepHours) * 0.3f; // Penalty for too little sleep
+        else
+            score -= (sleepHours - 9) * 0.1f; // Slight penalty for too much sleep
+
+        // Negative factors
+        score -= absenceDays * 0.2f; // More absences → lower score
+        score -= mobileUsageHours * 0.15f; // More mobile usage → lower score
+
+        // Base ability factor
+        score += baseAbility * 3;
+
+        // Add some noise
+        score += (float)_random.NextGaussian(0, 1);
+
+        // Clamp to 0-20 range
+        return Math.Clamp(score, 0, 20);
     }
+}
 
-    public static void SaveToCsv(IEnumerable<StudentInput> students, string filePath)
-    {
-        using var writer = new StreamWriter(filePath);
-        writer.WriteLine("Age,Gender,StudyHours,AttendanceRate,HomeworkCompletionRate,PreviousAverage,PreviousExamScore,MidtermScore,AbsenceDays,SleepHours,ClassParticipation,MobileUsageHours,PracticeTestCount,FinalScore");
-
-        foreach (var student in students)
-        {
-            writer.WriteLine($"{student.Age},{student.Gender},{student.StudyHours:F2},{student.AttendanceRate:F2},{student.HomeworkCompletionRate:F2},{student.PreviousAverage:F2},{student.PreviousExamScore:F2},{student.MidtermScore:F2},{student.AbsenceDays:F2},{student.SleepHours:F2},{student.ClassParticipation:F2},{student.MobileUsageHours:F2},{student.PracticeTestCount:F2},{student.FinalScore:F2}");
-        }
-    }
-
-    public static IEnumerable<StudentInput> LoadFromCsv(string filePath)
-    {
-        using var reader = new StreamReader(filePath);
-        reader.ReadLine(); // Skip header
-
-        while (!reader.EndOfStream)
-        {
-            var line = reader.ReadLine();
-            if (string.IsNullOrWhiteSpace(line)) continue;
-
-            var parts = line.Split(',');
-            if (parts.Length < 14) continue;
-
-            yield return new StudentInput
-            {
-                Age = float.Parse(parts[0]),
-                Gender = float.Parse(parts[1]),
-                StudyHours = ParseFloatOrNaN(parts[2]),
-                AttendanceRate = ParseFloatOrNaN(parts[3]),
-                HomeworkCompletionRate = ParseFloatOrNaN(parts[4]),
-                PreviousAverage = ParseFloatOrNaN(parts[5]),
-                PreviousExamScore = ParseFloatOrNaN(parts[6]),
-                MidtermScore = ParseFloatOrNaN(parts[7]),
-                AbsenceDays = ParseFloatOrNaN(parts[8]),
-                SleepHours = ParseFloatOrNaN(parts[9]),
-                ClassParticipation = ParseFloatOrNaN(parts[10]),
-                MobileUsageHours = ParseFloatOrNaN(parts[11]),
-                PracticeTestCount = ParseFloatOrNaN(parts[12]),
-                FinalScore = ParseFloatOrNaN(parts[13])
-            };
-        }
-    }
-
-    private static float ParseFloatOrNaN(string value)
-    {
-        return float.TryParse(value, out var result) ? result : float.NaN;
-    }
+public class StudentRecord
+{
+    public int Age { get; set; }
+    public string Gender { get; set; } = string.Empty;
+    public float StudyHours { get; set; }
+    public float AttendanceRate { get; set; }
+    public float HomeworkCompletionRate { get; set; }
+    public float PreviousAverage { get; set; }
+    public float PreviousExamScore { get; set; }
+    public float MidtermScore { get; set; }
+    public int AbsenceDays { get; set; }
+    public float SleepHours { get; set; }
+    public float ClassParticipation { get; set; }
+    public float MobileUsageHours { get; set; }
+    public int PracticeTestCount { get; set; }
+    public float FinalScore { get; set; }
 }

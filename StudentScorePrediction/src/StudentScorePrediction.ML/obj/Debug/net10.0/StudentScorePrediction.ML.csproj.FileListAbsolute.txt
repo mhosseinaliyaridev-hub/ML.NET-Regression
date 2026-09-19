@@ -1,0 +1,5 @@
+/workspace/StudentScorePrediction/src/StudentScorePrediction.ML/obj/Debug/net10.0/StudentScorePrediction.ML.csproj.AssemblyReference.cache
+/workspace/StudentScorePrediction/src/StudentScorePrediction.ML/obj/Debug/net10.0/StudentScorePrediction.ML.GeneratedMSBuildEditorConfig.editorconfig
+/workspace/StudentScorePrediction/src/StudentScorePrediction.ML/obj/Debug/net10.0/StudentScorePrediction.ML.AssemblyInfoInputs.cache
+/workspace/StudentScorePrediction/src/StudentScorePrediction.ML/obj/Debug/net10.0/StudentScorePrediction.ML.AssemblyInfo.cs
+/workspace/StudentScorePrediction/src/StudentScorePrediction.ML/obj/Debug/net10.0/StudentScorePrediction.ML.csproj.CoreCompileInputs.cache

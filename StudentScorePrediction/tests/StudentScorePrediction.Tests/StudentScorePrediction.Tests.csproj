@@ -18,9 +18,4 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\StudentScorePrediction.Application\StudentScorePrediction.Application.csproj" />
-    <ProjectReference Include="..\..\src\StudentScorePrediction.ML\StudentScorePrediction.ML.csproj" />
-  </ItemGroup>
-
 </Project>
