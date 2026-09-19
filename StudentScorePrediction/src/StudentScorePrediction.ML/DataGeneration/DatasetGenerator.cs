@@ -50,9 +50,9 @@ public class DatasetGenerator
         var previousExamScore = Math.Clamp(_random.NextGaussian(previousAverage, 2), 0, 20);
         var midtermScore = Math.Clamp(_random.NextGaussian(previousAverage + _random.NextFloat(-1, 1), 2), 0, 20);
         var absenceDays = Math.Max(0, (int)Math.Round((100 - attendanceRate) / 10 + _random.NextGaussian(0, 2)));
-        var sleepHours = Math.Clamp(_random.NextGaussian(7, 1.5), 3, 12);
+        var sleepHours = Math.Clamp(_random.NextGaussian(7, 1.5f), 3, 12);
         var classParticipation = Math.Clamp(_random.NextGaussian(40 + baseAbility * 50, 15), 0, 100);
-        var mobileUsageHours = Math.Clamp(_random.NextGaussian(4 - baseAbility * 2, 1.5), 0, 12);
+        var mobileUsageHours = Math.Clamp(_random.NextGaussian(4 - baseAbility * 2, 1.5f), 0, 12);
         var practiceTestCount = (int)Math.Max(0, Math.Round(_random.NextGaussian(3 + baseAbility * 7, 2)));
 
         // Calculate final score based on features with realistic relationships
