@@ -1,24 +1,21 @@
 using Microsoft.Extensions.Logging;
 using StudentScorePrediction.ML.DataGeneration;
 using StudentScorePrediction.ML.Models;
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.ML.Transforms;
+using Microsoft.ML;
+using Microsoft.ML.Data;
 using Microsoft.ML.Trainers.FastTree;
 using Microsoft.ML.Trainers.Sdca;
-using Microsoft.ML.Data;
 
 namespace StudentScorePrediction.ML.Services;
 
-public class MlService : IMlService
+public class MlService : IMlService, IDisposable
 {
     private readonly MLContext _mlContext;
     private readonly string _modelsPath;
     private readonly ILogger<MlService> _logger;
     private ITransformer? _currentModel;
     private ModelMetadata? _currentModelMetadata;
+    private bool _disposed;
 
     public MlService(ILogger<MlService> logger)
     {
@@ -62,7 +59,7 @@ public class MlService : IMlService
                 var startTime = DateTime.Now;
 
                 // Load data
-                var dataView = _mlContext.Data.LoadFromTextFile<StudentData>(
+                var dataView = _mlContext.Data.LoadFromTextFile<InputData>(
                     dataPath, 
                     hasHeader: true, 
                     separatorChar: ',');
@@ -162,7 +159,7 @@ public class MlService : IMlService
                 "ParticipationEncoded",
                 "MobileUsageHours",
                 "PracticeTestCount"))
-            .Append(_mlContext.Transforms.NormalizeMinMax("Features"));
+            .Append(_mlContext.Transforms.Normalizers.NormalizeMinMax("Features"));
 
         return algorithm.ToLower() switch
         {
@@ -186,7 +183,7 @@ public class MlService : IMlService
 
                 var startTime = DateTime.Now;
                 
-                var studentData = new StudentData
+                var studentData = new InputData
                 {
                     Age = input.Age,
                     Gender = input.Gender,
@@ -203,7 +200,7 @@ public class MlService : IMlService
                     PracticeTestCount = input.PracticeTestCount
                 };
 
-                var predictionEngine = _mlContext.Model.CreatePredictionEngine<StudentData, PredictionOutput>(_currentModel);
+                var predictionEngine = _mlContext.Model.CreatePredictionEngine<InputData, PredictionOutput>(_currentModel);
                 var prediction = predictionEngine.Predict(studentData);
 
                 // Clamp prediction to 0-20 range
@@ -238,7 +235,7 @@ public class MlService : IMlService
         {
             try
             {
-                var dataView = _mlContext.Data.LoadFromTextFile<StudentData>(dataPath, hasHeader: true, separatorChar: ',');
+                var dataView = _mlContext.Data.LoadFromTextFile<InputData>(dataPath, hasHeader: true, separatorChar: ',');
                 var model = _mlContext.Model.Load(modelPath, out var schema);
                 var predictions = model.Transform(dataView);
                 var metrics = _mlContext.Regression.Evaluate(predictions, labelColumnName: "Label", scoreColumnName: "Score");
@@ -269,7 +266,7 @@ public class MlService : IMlService
         return Task.Run(async () =>
         {
             var algorithms = new[] { "FastTree", "FastForest", "SDCA" };
-            var results = new System.Collections.Generic.List<TrainingResult>();
+            var results = new List<TrainingResult>();
 
             foreach (var algo in algorithms)
             {
@@ -291,10 +288,14 @@ public class MlService : IMlService
 
     private int GetRowCount(string filePath)
     {
-        return System.IO.File.ReadLines(filePath).Count() - 1;
+        return File.ReadLines(filePath).Count() - 1;
     }
 
     public void Dispose()
     {
+        if (!_disposed)
+        {
+            _disposed = true;
+        }
     }
 }

@@ -1,26 +1,10 @@
 # Student Score Prediction System
 
-یک پروژه کامل و حرفه‌ای برای پیش‌بینی نمره نهایی دانش‌آموزان با استفاده از ML.NET و Blazor.
+یک سیستم حرفه‌ای پیش‌بینی نمره دانش‌آموزان با استفاده از Machine Learning در C# و ML.NET
 
 ## 🎯 هدف پروژه
 
-این سیستم بر اساس اطلاعات یک دانش‌آموز (سن، جنسیت، ساعات مطالعه، نرخ حضور و ...) نمره نهایی او را پیش‌بینی می‌کند.
-
-## 🛠 تکنولوژی‌ها
-
-### Backend
-- C# / .NET 10
-- ASP.NET Core Web API
-- ML.NET (Machine Learning)
-- Entity Framework Core
-- SQL Server
-
-### Frontend
-- Blazor WebAssembly
-- MudBlazor (UI Component Library)
-
-### Documentation
-- Swagger / OpenAPI
+این پروژه یک سیستم کامل برای پیش‌بینی نمره نهایی دانش‌آموزان بر اساس ویژگی‌های مختلف تحصیلی و رفتاری است. هدف اصلی یادگیری عملی Machine Learning با C# بدون استفاده از Python می‌باشد.
 
 ## 🏗 معماری پروژه
 
@@ -29,35 +13,51 @@
 ```
 StudentScorePrediction/
 ├── src/
-│   ├── StudentScorePrediction.Domain/          # Entities, Enums
-│   ├── StudentScorePrediction.Application/     # DTOs, Interfaces, Services
-│   ├── StudentScorePrediction.Infrastructure/  # EF Core, Repositories
+│   ├── StudentScorePrediction.Domain/          # Entities, Enums, Interfaces
+│   ├── StudentScorePrediction.Application/     # DTOs, Services, Business Logic
+│   ├── StudentScorePrediction.Infrastructure/  # EF Core, Repositories, Database
 │   ├── StudentScorePrediction.ML/              # ML.NET, Dataset Generator
 │   ├── StudentScorePrediction.Api/             # ASP.NET Core Web API
-│   └── StudentScorePrediction.Client/          # Blazor WebAssembly
+│   └── StudentScorePrediction.Client/          # Blazor WebAssembly + MudBlazor
 └── tests/
     └── StudentScorePrediction.Tests/           # Unit Tests
 ```
 
-## 📊 Featureهای مدل
+## 🔧 تکنولوژی‌ها
 
-### ورودی‌ها (Features):
+### Backend
+- **.NET 10**
+- **ASP.NET Core Web API**
+- **ML.NET** (Machine Learning)
+- **Entity Framework Core**
+- **SQL Server**
+
+### Frontend
+- **Blazor WebAssembly**
+- **MudBlazor** (UI Components)
+
+### Documentation
+- **Swagger / OpenAPI**
+
+## 📊 ویژگی‌های مدل
+
+### Features (ورودی‌ها)
 - Age (سن)
 - Gender (جنسیت)
-- StudyHours (ساعات مطالعه)
+- StudyHours (ساعت مطالعه)
 - AttendanceRate (نرخ حضور)
 - HomeworkCompletionRate (نرخ تکمیل تکالیف)
 - PreviousAverage (میانگین نمرات قبلی)
 - PreviousExamScore (نمره امتحان قبلی)
 - MidtermScore (نمره میان‌ترم)
-- AbsenceDays (تعداد روزهای غیبت)
-- SleepHours (ساعات خواب)
+- AbsenceDays (روزهای غیبت)
+- SleepHours (ساعت خواب)
 - ClassParticipation (مشارکت در کلاس)
-- MobileUsageHours (ساعات استفاده از موبایل)
+- MobileUsageHours (ساعت استفاده از موبایل)
 - PracticeTestCount (تعداد آزمون‌های تمرینی)
 
-### خروجی (Label):
-- FinalScore (نمره نهایی - بین 0 تا 20)
+### Label (خروجی)
+- **FinalScore** (نمره نهایی - بین ۰ تا ۲۰)
 
 ## 🚀 راهنمای اجرا
 
@@ -68,133 +68,135 @@ StudentScorePrediction/
 
 ### مراحل اجرا
 
-#### 1. Restore کردن پکیج‌ها
+#### ۱. بازیابی پکیج‌ها
 ```bash
 cd StudentScorePrediction
 dotnet restore
 ```
 
-#### 2. Build کردن پروژه
-```bash
-dotnet build
-```
-
-#### 3. تنظیم Connection String
-فایل `appsettings.json` را باز کرده و Connection String را تنظیم کنید:
+#### ۲. تنظیم Connection String
+فایل `src/StudentScorePrediction.Api/appsettings.json` را باز کنید و Connection String را تنظیم کنید:
 ```json
 "ConnectionStrings": {
   "DefaultConnection": "Server=localhost;Database=StudentScorePrediction;Trusted_Connection=True;TrustServerCertificate=True;"
 }
 ```
 
-#### 4. ایجاد Database
+#### ۳. ایجاد Database
 ```bash
-cd src/StudentScorePrediction.Api
-dotnet ef database update
+dotnet ef database update --project src/StudentScorePrediction.Infrastructure --startup-project src/StudentScorePrediction.Api
 ```
 
-اگر EF Core CLI نصب نیست:
+#### ۴. اجرای API
 ```bash
-dotnet tool install --global dotnet-ef
+dotnet run --project src/StudentScorePrediction.Api
 ```
 
-#### 5. اجرای API
+API روی آدرس `https://localhost:7001` و `http://localhost:5001` اجرا می‌شود.
+
+#### ۵. اجرای Blazor Client (در ترمینال دیگر)
 ```bash
-dotnet run
+dotnet run --project src/StudentScorePrediction.Client
 ```
 
-API روی https://localhost:7001 اجرا می‌شود.
+Client روی آدرس `https://localhost:7002` اجرا می‌شود.
 
-#### 6. اجرای Blazor Client (در ترمینال دیگر)
-```bash
-cd src/StudentScorePrediction.Client
-dotnet run
-```
+## 📖 نحوه استفاده
 
-## 📡 API Endpoints
+### ۱. تولید Dataset
+- به صفحه `/dataset` در Blazor بروید
+- تعداد رکوردها را انتخاب کنید (حداقل ۱۰,۰۰۰)
+- دکمه Generate Dataset را بزنید
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /api/students | دریافت لیست دانش‌آموزان |
-| POST | /api/students | ایجاد دانش‌آموز جدید |
-| GET | /api/predictions | دریافت لیست پیش‌بینی‌ها |
-| POST | /api/predictions | پیش‌بینی نمره |
-| POST | /api/training/start | شروع آموزش مدل |
-| GET | /api/training/status | وضعیت آموزش |
-| GET | /api/models | دریافت لیست مدل‌ها |
-| POST | /api/models/{id}/activate | فعال‌سازی مدل |
-| POST | /api/dataset/generate | تولید Dataset |
-| GET | /api/dataset/statistics | آمار Dataset |
+### ۲. آموزش مدل
+- به صفحه `/training` بروید
+- الگوریتم مورد نظر را انتخاب کنید (FastTree, FastForest, SDCA)
+- Training را شروع کنید
+- Metricها را مشاهده کنید (MAE, MSE, RMSE, R²)
 
-## 🤖 Machine Learning
+### ۳. فعال‌سازی مدل
+- به صفحه `/models` بروید
+- مدل مورد نظر را انتخاب کنید
+- دکمه Activate را بزنید
 
-### الگوریتم‌های پشتیبانی شده:
-1. **SDCA Regression** - سریع و مناسب برای داده‌های بزرگ
-2. **FastTree Regression** - دقت بالا، زمان آموزش متوسط
-3. **FastForest Regression** - مقاوم در برابر Overfitting
+### ۴. پیش‌بینی نمره
+- به صفحه `/prediction` بروید
+- اطلاعات دانش‌آموز را وارد کنید
+- دکمه Predict Score را بزنید
+- نمره پیش‌بینی شده را مشاهده کنید
 
-### Metricهای ارزیابی:
+### ۵. مشاهده تاریخچه
+- به صفحه `/predictions` بروید
+- تمام پیش‌بینی‌های انجام شده را مشاهده کنید
+
+## 📈 الگوریتم‌های پشتیبانی شده
+
+1. **FastTree Regression** - الگوریتم Gradient Boosting Trees
+2. **FastForest Regression** - الگوریتم Random Forest
+3. **SDCA Regression** - الگوریتم Stochastic Dual Coordinate Ascent
+
+## 📊 Metricهای ارزیابی
+
 - **MAE** (Mean Absolute Error) - میانگین خطای مطلق
 - **MSE** (Mean Squared Error) - میانگین خطای مربعی
-- **RMSE** (Root Mean Squared Error) - جذر میانگین خطای مربعی
+- **RMSE** (Root Mean Squared Error) - ریشه میانگین خطای مربعی
 - **R²** (Coefficient of Determination) - ضریب تعیین
 
-## 📁 Dataset Generation
+## 🔐 امنیت
 
-سیستم قابلیت تولید Datasetهای بزرگ را دارد:
-- حداقل: 1,000 رکورد
-- پیشنهادی: 100,000 رکورد
-- حداکثر: 1,000,000 رکورد
+- Input Validation برای تمام ورودی‌ها
+- Global Exception Handling
+- CORS Configuration
+- ساختار آماده برای JWT Authentication
 
-داده‌ها به صورت واقع‌گرایانه تولید می‌شوند با روابط منطقی بین Featureها.
+## 📝 توضیحات Machine Learning
+
+### مفاهیم کلیدی
+
+- **Feature (ویژگی)**: ورودی‌های مدل که برای پیش‌بینی استفاده می‌شوند
+- **Label (برچسب)**: مقداری که مدل باید پیش‌بینی کند (نمره نهایی)
+- **Regression (رگرسیون)**: نوعی از یادگیری ماشین برای پیش‌بینی مقادیر عددی
+- **Training (آموزش)**: فرآیند یادگیری مدل از داده‌ها
+- **Prediction (پیش‌بینی)**: استفاده از مدل آموزش دیده برای پیش‌بینی مقادیر جدید
+- **Overfitting (بیش‌برازش)**: وقتی مدل بیش از حد به داده‌های آموزشی وابسته می‌شود
+
+### Pipeline آموزش مدل
+
+1. **Load Data**: بارگذاری داده‌ها از فایل CSV
+2. **Data Cleaning**: مدیریت مقادیر Missing و Outliers
+3. **Feature Engineering**: تبدیل داده‌ها به فرمت مناسب
+4. **Train/Test Split**: تقسیم داده‌ها به بخش‌های آموزش و تست
+5. **Model Training**: آموزش مدل با الگوریتم انتخاب شده
+6. **Evaluation**: ارزیابی مدل با Metricهای مختلف
+7. **Model Saving**: ذخیره مدل برای استفاده بعدی
 
 ## 🧪 Testing
 
 برای اجرای تست‌ها:
 ```bash
-cd tests/StudentScorePrediction.Tests
 dotnet test
 ```
 
-## 📝 مفاهیم Machine Learning
+## 📦 Docker (اختیاری)
 
-### اصطلاحات مهم:
+پروژه قابلیت اجرا با Docker را دارد:
+```bash
+docker-compose up -d
+```
 
-| اصطلاح | معنی | توضیح |
-|--------|------|-------|
-| **Feature** | ویژگی | ورودی‌های مدل (مثل سن، ساعات مطالعه) |
-| **Label** | برچسب | مقداری که مدل پیش‌بینی می‌کند (نمره نهایی) |
-| **Training** | آموزش | فرآیند یادگیری مدل از داده‌ها |
-| **Prediction** | پیش‌بینی | استفاده از مدل برای تخمین مقدار جدید |
-| **Regression** | رگرسیون | نوعی مسئله که خروجی عددی است |
-| **Overfitting** | بیش‌برازش | وقتی مدل بیش از حد به داده آموزشی وابسته است |
-| **Dataset** | مجموعه داده | مجموعه‌ای از نمونه‌های آموزشی |
+## 🤝 مشارکت
 
-## 🎨 UI Pages
+برای مشارکت در پروژه:
+1. Fork کنید
+2. Branch جدید بسازید
+3. تغییرات را commit کنید
+4. Push به branch
+5. Pull Request ایجاد کنید
 
-- **/** - Dashboard با نمودارها و آمار
-- **/students** - مدیریت دانش‌آموزان
-- **/prediction** - صفحه پیش‌بینی نمره
-- **/predictions** - تاریخچه پیش‌بینی‌ها
-- **/training** - آموزش مدل
-- **/models** - مدیریت مدل‌ها
-- **/dataset** - مدیریت Dataset
+## 📄 لایسنس
 
-## 🔧 Troubleshooting
+این پروژه تحت لایسنس MIT منتشر شده است.
 
-### خطای اتصال به Database
-- مطمئن شوید SQL Server در حال اجرا است
-- Connection String را بررسی کنید
-- دسترسی کاربر را بررسی کنید
+## 👨‍💻 توسعه‌دهنده
 
-### خطای ML.NET
-- مطمئن شوید Dataset وجود دارد
-- حجم RAM کافی باشد (برای Datasetهای بزرگ)
-
-## 📄 License
-
-این پروژه برای اهداف آموزشی ایجاد شده است.
-
-## 👨‍💻 Author
-
-پروژه دانشجویی - یادگیری Machine Learning با C#
+این پروژه به عنوان یک نمونه کار حرفه‌ای برای یادگیری Machine Learning با C# طراحی شده است.
